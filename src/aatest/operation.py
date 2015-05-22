@@ -49,20 +49,20 @@ class Operation(object):
         self._setup()
 
     def catch_exception(self, func, **kwargs):
+        res = None
         try:
             self.conv.trace.info(
                 "Running {} with kwargs: {}".format(func, kwargs))
             res = func(**kwargs)
         except Exception as err:
-            try:
-                assert isinstance(err, self.expect_exception)
-            except AssertionError:
+            if not self.expect_exception:
                 raise
-            except KeyError:
-                raise err
-            else:
-                res = None
+            elif not isinstance(err, self.expect_exception):
+                raise
         else:
+            if self.expect_exception:
+                raise Exception(
+                    "Expected exception '{}'.".format(self.expect_exception))
             self.conv.trace.reply(res)
 
         return res
