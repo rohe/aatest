@@ -4,17 +4,18 @@ import sys
 import traceback
 from oic.exception import PyoidcError
 from oic.oauth2 import rndstr
-from oic.oic import ProviderConfigurationResponse, RegistrationResponse
+from oic.oic import ProviderConfigurationResponse
+from oic.oic import RegistrationResponse
 
-from rrtest.opfunc import Operation
-from rrtest import FatalError
-from rrtest import Break
-from rrtest.check import ExpectedError
-from rrtest.check import INTERACTION
-from rrtest.interaction import Interaction
-from rrtest.interaction import Action
-from rrtest.interaction import InteractionNeeded
-from rrtest.status import STATUSCODE
+from aatest.opfunc import Operation
+from aatest import FatalError
+from aatest import Break
+from aatest.check import ExpectedError
+from aatest.check import INTERACTION
+from aatest.interaction import Interaction
+from aatest.interaction import Action
+from aatest.interaction import InteractionNeeded
+from aatest.status import STATUSCODE
 
 
 __author__ = 'rolandh'

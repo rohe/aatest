@@ -27,6 +27,7 @@ class Operation(object):
         self.req_args = {}
         self.op_args = {}
         self.expect_exception = None
+        self.sequence = []
 
     def __call__(self, *args, **kwargs):
         pass
