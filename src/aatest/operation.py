@@ -59,6 +59,8 @@ class Operation(object):
                 raise
             elif not isinstance(err, self.expect_exception):
                 raise
+            else:
+                self.conv.trace.info("Got expected exception {}".format(err))
         else:
             if self.expect_exception:
                 raise Exception(
