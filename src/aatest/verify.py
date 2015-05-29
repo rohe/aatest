@@ -14,7 +14,6 @@ class Verify(object):
         self.check_factory = check_factory
         self.msg_factory = msg_factory
         self.trace = conv.trace
-        self.test_output = []
         self.ignore_check = []
         self.exception = None
         self.conv = conv
@@ -44,14 +43,14 @@ class Verify(object):
             chk = test(**kwargs)
 
         if chk.__class__.__name__ not in self.ignore_check:
-            stat = chk(self.conv, self.test_output)
+            stat = chk(self.conv, self.conv.test_output)
             self.check_severity(stat)
 
     def err_check(self, test, err=None, bryt=True):
         if err:
             self.exception = err
         chk = self.check_factory(test)()
-        chk(self, self.test_output)
+        chk(self, self.conv.test_output)
         if bryt:
             e = FatalError("%s" % err)
             e.trace = "".join(traceback.format_exception(*sys.exc_info()))

@@ -44,7 +44,7 @@ class Operation(object):
         if self.skip:
             return
         else:
-            if self._tests["pre"] or self.tests["post"]:
+            if self.tests["pre"] or self.tests["post"]:
                 _ver = Verify(self.check_factory, self.conv.msg_factory,
                               self.conv)
             else:
@@ -53,7 +53,7 @@ class Operation(object):
             if self._tests["pre"]:
                 _ver.test_sequence(self.tests["pre"])
             self.run(*args, **kwargs)
-            if self._tests["post"]:
+            if self.tests["post"]:
                 _ver.test_sequence(self.tests["post"])
 
     def _setup(self):
