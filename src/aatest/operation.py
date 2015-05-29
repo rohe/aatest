@@ -28,9 +28,16 @@ class Operation(object):
         self.op_args = {}
         self.expect_exception = None
         self.sequence = []
+        self.skip = False
+
+    def run(self, *args, **kwargs):
+        pass
 
     def __call__(self, *args, **kwargs):
-        pass
+        if self.skip:
+            return
+        else:
+            self.run(*args, **kwargs)
 
     def _setup(self):
         for op, arg in self.funcs.items():
@@ -40,10 +47,13 @@ class Operation(object):
         try:
             funcs = profile_map[self.__class__][self.profile[0]]
         except KeyError:
-            pass
+            self.skip = True
         else:
-            for op, arg in funcs.items():
-                op(self, arg)
+            if funcs is None:
+                self.skip = True
+            else:
+                for op, arg in funcs.items():
+                    op(self, arg)
 
     def setup(self, profile_map):
         self.map_profile(profile_map)
