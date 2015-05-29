@@ -1,5 +1,7 @@
+import copy
 import json
 import logging
+from aatest.verify import Verify
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +22,7 @@ def print_result(resp):
 class Operation(object):
     _tests = {"pre": [], "post": []}
 
-    def __init__(self, conv, profile, test_id, conf, funcs):
+    def __init__(self, conv, profile, test_id, conf, funcs, check_factory):
         self.conv = conv
         self.funcs = funcs
         self.test_id = test_id
@@ -31,6 +33,9 @@ class Operation(object):
         self.expect_exception = None
         self.sequence = []
         self.skip = False
+        self.check_factory = check_factory
+        # detach
+        self.tests = copy.deepcopy(self._tests)
 
     def run(self, *args, **kwargs):
         pass
@@ -39,9 +44,22 @@ class Operation(object):
         if self.skip:
             return
         else:
+            if self._tests["pre"] or self.tests["post"]:
+                _ver = Verify(self.check_factory, self.conv.msg_factory,
+                              self.conv)
+            else:
+                _ver = None
+
+            if self._tests["pre"]:
+                _ver.test_sequence(self.tests["pre"])
             self.run(*args, **kwargs)
+            if self._tests["post"]:
+                _ver.test_sequence(self.tests["post"])
 
     def _setup(self):
+        if self.skip:  # Don't bother
+            return
+
         for op, arg in self.funcs.items():
             op(self, arg)
 
@@ -57,8 +75,18 @@ class Operation(object):
                 for op, arg in funcs.items():
                     op(self, arg)
 
+    def op_setup(self):
+        pass
+
     def setup(self, profile_map):
+        """
+        Order between setup methods are significant
+
+        :param profile_map:
+        :return:
+        """
         self.map_profile(profile_map)
+        self.op_setup()
         self._setup()
 
     def catch_exception(self, func, **kwargs):
