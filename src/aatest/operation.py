@@ -18,6 +18,8 @@ def print_result(resp):
 
 
 class Operation(object):
+    _tests = {"pre": [], "post": []}
+
     def __init__(self, conv, profile, test_id, conf, funcs):
         self.conv = conv
         self.funcs = funcs
