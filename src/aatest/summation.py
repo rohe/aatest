@@ -1,7 +1,25 @@
+import json
+import os
+import tarfile
 from aatest import END_TAG
-from aatest.check import STATUSCODE, WARNING, CRITICAL
+from aatest.check import STATUSCODE
+from aatest.check import WARNING
+from aatest.check import CRITICAL
+from aatest.check import INCOMPLETE
 
 __author__ = 'roland'
+
+
+def trace_output(trace):
+    """
+
+    """
+    element = ["Trace output\n"]
+    for item in trace:
+        element.append("%s" % item)
+    element.append("\n")
+    return element
+
 
 def test_output(out):
     """
@@ -88,3 +106,63 @@ def represent_result(info, tid):
         text = "%s\nWarnings:\n%s" % (text, "\n".join(warnings))
 
     return text
+
+def pprint_json(json_txt):
+    _jso = json.loads(json_txt)
+    return json.dumps(_jso, sort_keys=True, indent=2, separators=(',', ': '))
+
+
+def evaluate(session):
+    try:
+        if session["node"].complete:
+            _info = session["test_info"][session["testid"]]
+            if end_tags(_info):
+                _sum = test_summation(_info["test_output"], session["testid"])
+                session["node"].state = _sum["status"]
+            else:
+                session["node"].state = INCOMPLETE
+        else:
+            session["node"].state = INCOMPLETE
+    except (AttributeError, KeyError):
+        pass
+
+
+def mk_tardir(issuer, test_profile):
+    wd = os.getcwd()
+
+    tardirname = wd
+    for part in ["tar", issuer, test_profile]:
+        tardirname = os.path.join(tardirname, part)
+        if not os.path.isdir(tardirname):
+            os.mkdir(tardirname)
+
+    logdirname = os.path.join(wd, "log", issuer, test_profile)
+    for item in os.listdir(logdirname):
+        if item.startswith("."):
+            continue
+
+        ln = os.path.join(logdirname, item)
+        tn = os.path.join(tardirname, "{}.txt".format(item))
+        if not os.path.isfile(tn):
+            os.symlink(ln, tn)
+
+
+def create_tar_archive(issuer, test_profile):
+    mk_tardir(issuer, test_profile)
+
+    wd = os.getcwd()
+    _dir = os.path.join(wd, "tar", issuer)
+    os.chdir(_dir)
+
+    tar = tarfile.open("{}.tar".format(test_profile), "w")
+
+    for item in os.listdir(test_profile):
+        if item.startswith("."):
+            continue
+
+        fn = os.path.join(test_profile, item)
+
+        if os.path.isfile(fn):
+            tar.add(fn)
+    tar.close()
+    os.chdir(wd)

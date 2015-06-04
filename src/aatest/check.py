@@ -17,11 +17,15 @@ ERROR = 3
 CRITICAL = 4
 INTERACTION = 5
 
+INCOMPLETE = 4
+
 STATUSCODE = ["INFORMATION", "OK", "WARNING", "ERROR", "CRITICAL",
               "INTERACTION"]
 
 CONT_JSON = "application/json"
 CONT_JWT = "application/jwt"
+
+END_TAG = "==== END ===="
 
 
 def get_protocol_response(conv, cls):
