@@ -1,6 +1,7 @@
 import copy
 import json
 import logging
+from oic.utils.http_util import Response
 from aatest.verify import Verify
 
 logger = logging.getLogger(__name__)
@@ -52,7 +53,9 @@ class Operation(object):
 
             if self._tests["pre"]:
                 _ver.test_sequence(self.tests["pre"])
-            self.run(*args, **kwargs)
+            res = self.run(*args, **kwargs)
+            if res:
+                return res
             if self.tests["post"]:
                 _ver.test_sequence(self.tests["post"])
 
@@ -109,3 +112,20 @@ class Operation(object):
             self.conv.trace.reply(res)
 
         return res
+
+
+class Notice(object):
+    def __init__(self):
+        self.template = ""
+
+    def __call__(self, lookup, environ, start_response, **kwargs):
+        resp = Response(mako_template=self.template,
+                        template_lookup=lookup,
+                        headers=[])
+        return resp(environ, start_response, **kwargs)
+
+
+class Note(Notice):
+    def __init__(self):
+        Notice.__init__(self)
+        self.template = "note.mako"

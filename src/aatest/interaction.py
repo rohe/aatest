@@ -98,6 +98,9 @@ class Interaction(object):
         self.interactions = interactions
 
     def pick_interaction(self, _base="", content="", req=None):
+        if self.interactions is None:
+            return None
+
         unic = content
         if content:
             _bs = BeautifulSoup(content)

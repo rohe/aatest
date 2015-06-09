@@ -40,6 +40,8 @@ class Conversation(object):
         self.features = features
         self.extra_args = extra_args
         self.exception = None
+        self.timestamp = []
+        self.protocol_response = []
 
     def for_me(self, url):
         for cb in self.callback_uris:
@@ -105,6 +107,9 @@ class Conversation(object):
             self.trace.error("Page Content: %s" % content)
             self.err_check("interaction-needed")
             raise
+
+        if _spec is None:
+            return response
 
         if len(_spec) > 2:
             self.trace.info(">> %s <<" % _spec["page-type"])

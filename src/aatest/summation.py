@@ -73,11 +73,10 @@ def test_summation(test_output, sid):
     return info
 
 
-def represent_result(info, tid):
-    if not end_tags(info):
+def represent_result(info, session):
+    _stat = evaluate(session, info)
+    if _stat == INCOMPLETE:
         return "PARTIAL RESULT"
-
-    _stat = test_summation(info["test_output"], tid)["status"]
 
     if _stat < WARNING or _stat > CRITICAL:
         text = "PASSED"
@@ -95,13 +94,6 @@ def represent_result(info, tid):
                 warnings.append(item["message"])
             except KeyError:
                 pass
-
-    if text == "PASSED":
-        try:
-            text = "UNKNOWN - %s" % info["node"].kwargs["result"]
-        except KeyError:
-            pass
-
     if warnings:
         text = "%s\nWarnings:\n%s" % (text, "\n".join(warnings))
 
@@ -112,19 +104,19 @@ def pprint_json(json_txt):
     return json.dumps(_jso, sort_keys=True, indent=2, separators=(',', ': '))
 
 
-def evaluate(session):
+def evaluate(session, info):
+    _state = INCOMPLETE
     try:
-        if session["node"].complete:
-            _info = session["test_info"][session["testid"]]
-            if end_tags(_info):
-                _sum = test_summation(_info["test_output"], session["testid"])
-                session["node"].state = _sum["status"]
-            else:
-                session["node"].state = INCOMPLETE
-        else:
-            session["node"].state = INCOMPLETE
+        if not session["node"].complete:
+            if end_tags(info):
+                session["node"].complete = True
+                _sum = test_summation(info["test_output"], session["testid"])
+                _state = _sum["status"]
     except (AttributeError, KeyError):
         pass
+
+    session["node"].state = _state
+    return _state
 
 
 def mk_tardir(issuer, test_profile):
