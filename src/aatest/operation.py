@@ -23,9 +23,10 @@ def print_result(resp):
 class Operation(object):
     _tests = {"pre": [], "post": []}
 
-    def __init__(self, conv, profile, test_id, conf, funcs, check_factory,
+    def __init__(self, conv, io, profile, test_id, conf, funcs, check_factory,
                  cache):
         self.conv = conv
+        self.io = io
         self.funcs = funcs
         self.test_id = test_id
         self.conf = conf
@@ -119,11 +120,15 @@ class Operation(object):
 class Notice(Operation):
     template = ""
 
-    def __call__(self, lookup, environ, start_response, **kwargs):
+    def __init__(self, conv, io, **kwargs):
+        Operation.__init__(self, conv, io, **kwargs)
+
+    def __call__(self, *args, **kwargs):
         resp = Response(mako_template=self.template,
-                        template_lookup=lookup,
+                        template_lookup=self.io.lookup,
                         headers=[])
-        return resp(environ, start_response, **kwargs)
+        return resp(self.io.environ, self.io.start_response,
+                    **kwargs)
 
 
 class Note(Notice):
