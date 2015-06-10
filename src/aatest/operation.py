@@ -23,7 +23,8 @@ def print_result(resp):
 class Operation(object):
     _tests = {"pre": [], "post": []}
 
-    def __init__(self, conv, profile, test_id, conf, funcs, check_factory):
+    def __init__(self, conv, profile, test_id, conf, funcs, check_factory,
+                 cache):
         self.conv = conv
         self.funcs = funcs
         self.test_id = test_id
@@ -35,6 +36,7 @@ class Operation(object):
         self.sequence = []
         self.skip = False
         self.check_factory = check_factory
+        self.cache = cache
         # detach
         self.tests = copy.deepcopy(self._tests)
 
@@ -70,7 +72,7 @@ class Operation(object):
         try:
             funcs = profile_map[self.__class__][self.profile[0]]
         except KeyError:
-            self.skip = True
+            pass
         else:
             if funcs is None:
                 self.skip = True
@@ -114,9 +116,8 @@ class Operation(object):
         return res
 
 
-class Notice(object):
-    def __init__(self):
-        self.template = ""
+class Notice(Operation):
+    template = ""
 
     def __call__(self, lookup, environ, start_response, **kwargs):
         resp = Response(mako_template=self.template,
@@ -126,6 +127,4 @@ class Notice(object):
 
 
 class Note(Notice):
-    def __init__(self):
-        Notice.__init__(self)
-        self.template = "note.mako"
+    template = "note.mako"
