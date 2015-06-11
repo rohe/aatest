@@ -1,6 +1,7 @@
 import copy
 import json
 import logging
+import functools
 from oic.utils.http_util import Response
 from aatest.verify import Verify
 
@@ -18,6 +19,15 @@ def print_result(resp):
                          separators=(',', ': '))
 
     logger.info("{}: {}".format(cl_name, txt))
+
+
+def request_with_client_http_session(instance, method, url, **kwargs):
+    """Use the clients http session to make http request.
+    Note: client.http_request function requires the parameters in reverse
+    order (compared to the requests library): (method, url) vs (url, method)
+    so we can't bind the instance method directly.
+    """
+    return instance.conv.client.http_request(url, method)
 
 
 class Operation(object):
@@ -41,6 +51,14 @@ class Operation(object):
         self.cache = cache
         # detach
         self.tests = copy.deepcopy(self._tests)
+
+        # Monkey-patch: make sure we use the same http session (preserving
+        # cookies) when fetching keys from issuers 'jwks_uri' as for the
+        # rest of the test sequence
+        import oic.utils.keyio
+
+        oic.utils.keyio.request = functools.partial(
+            request_with_client_http_session, self)
 
     def run(self, *args, **kwargs):
         pass
