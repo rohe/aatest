@@ -23,10 +23,11 @@ def print_result(resp):
 class Operation(object):
     _tests = {"pre": [], "post": []}
 
-    def __init__(self, conv, io, profile, test_id, conf, funcs, check_factory,
-                 cache):
+    def __init__(self, conv, io, sh, profile, test_id, conf, funcs,
+                 check_factory, cache):
         self.conv = conv
         self.io = io
+        self.sh = sh
         self.funcs = funcs
         self.test_id = test_id
         self.conf = conf
@@ -120,16 +121,31 @@ class Operation(object):
 class Notice(Operation):
     template = ""
 
-    def __init__(self, conv, io, **kwargs):
-        Operation.__init__(self, conv, io, **kwargs)
+    def __init__(self, conv, io, sh, **kwargs):
+        Operation.__init__(self, conv, io, sh, **kwargs)
+        self.message = ""
+
+    def args(self):
+        return {}
 
     def __call__(self, *args, **kwargs):
         resp = Response(mako_template=self.template,
                         template_lookup=self.io.lookup,
                         headers=[])
         return resp(self.io.environ, self.io.start_response,
-                    **kwargs)
+                    **self.args())
 
 
 class Note(Notice):
     template = "note.mako"
+
+    def op_setup(self):
+        self.message = self.conv.flow["note"]
+
+    def args(self):
+        return {
+            "url": "%scontinue?path=%s&index=%d" % (
+                self.io.conf.BASE, self.test_id, self.sh.session["index"]),
+            "back": self.io.conf.BASE,
+            "note": self.message,
+        }
