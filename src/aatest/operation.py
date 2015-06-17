@@ -3,6 +3,7 @@ import json
 import logging
 import functools
 from oic.utils.http_util import Response
+import time
 from aatest.verify import Verify
 
 logger = logging.getLogger(__name__)
@@ -45,6 +46,7 @@ class Operation(object):
         self.req_args = {}
         self.op_args = {}
         self.expect_exception = None
+        self.expect_error = None
         self.sequence = []
         self.skip = False
         self.check_factory = check_factory
@@ -167,3 +169,13 @@ class Note(Notice):
             "back": self.io.conf.BASE,
             "note": self.message,
         }
+
+
+class TimeDelay(Operation):
+    def __init__(self, conv, io, sh, **kwargs):
+        Operation.__init__(self, conv, io, sh, **kwargs)
+        self.delay = 30
+
+    def __call__(self, *args, **kwargs):
+        time.sleep(self.delay)
+        return None

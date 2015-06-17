@@ -34,6 +34,10 @@ class NotSupported(AATestError):
     pass
 
 
+class RequirementsNotMet(Exception):
+    pass
+
+
 class Trace(object):
     def __init__(self):
         self.trace = []
