@@ -170,23 +170,3 @@ def get_node(tests, nid):
         return l[0]
     except (ValueError, IndexError):
         return None
-
-class SessionHandler(object):
-    def __init__(self, profiles, profile, test_flows, test_class, orddesc):
-        self.profiles = profiles
-        self.profile = profile
-        self.test_flows = test_flows
-        self.test_class = test_class
-        self.orddesc = orddesc
-
-    def session_setup(self, **kwargs):
-        pass
-
-    def init_session(self, session, profile=None):
-        pass
-
-    def reset_session(self, session, profile=None):
-        pass
-
-    def session_init(self, session):
-        pass

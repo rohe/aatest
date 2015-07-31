@@ -21,12 +21,11 @@ __author__ = 'roland'
 logger = logging.getLogger(__name__)
 
 class Conversation(object):
-    def __init__(self, flow, client, cb_uris, msg_factory, interaction=None,
+    def __init__(self, flow, client, msg_factory, interaction=None,
                  check_factory=None, features=None, trace_cls=Trace,
                  **extra_args):
         self.flow = flow
         self.client = client
-        self.callback_uris = cb_uris
         self.msg_factory = msg_factory
         self.trace = trace_cls()
         self.qresponse = []
@@ -42,6 +41,10 @@ class Conversation(object):
         self.exception = None
         self.timestamp = []
         self.protocol_response = []
+        try:
+            self.callback_uris = extra_args["callback_uris"]
+        except KeyError:
+            pass
 
     def for_me(self, url):
         for cb in self.callback_uris:
