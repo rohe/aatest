@@ -133,7 +133,8 @@ class Operation(object):
             if self.expect_exception:
                 raise Exception(
                     "Expected exception '{}'.".format(self.expect_exception))
-            self.conv.trace.reply(res)
+            if res:
+                self.conv.trace.reply(res)
 
         return res
 
