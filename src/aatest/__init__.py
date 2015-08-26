@@ -39,9 +39,12 @@ class RequirementsNotMet(Exception):
 
 
 class Trace(object):
-    def __init__(self):
+    def __init__(self, absolut_start=False):
         self.trace = []
         self.start = time.time()
+        if absolut_start:
+            self.trace.append("Trace init: {}".format(
+                time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime())))
 
     @staticmethod
     def format(resp):
