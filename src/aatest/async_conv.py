@@ -167,7 +167,7 @@ class Conversation(object):
                     try:
                         _response = self.client.send(
                             url, "GET", headers={"Referer": self.last_url})
-                    except Exception, err:
+                    except Exception as err:
                         raise FatalError("%s" % err)
 
                     content = _response.text
@@ -229,7 +229,7 @@ class Conversation(object):
 
             except (FatalError, InteractionNeeded):
                 raise
-            except Exception, err:
+            except Exception as err:
                 self.err_check("exception", err, False)
                 self.test_output.append(
                     {"status": 3, "id": "Communication error",

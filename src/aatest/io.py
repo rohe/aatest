@@ -81,7 +81,7 @@ class ClIO(IO):
             "trace": _conv.trace
         }
         _state = evaluate(session, info)
-        print "{} {}".format(SIGN[_state], session["node"].name)
+        print("{} {}".format(SIGN[_state], session["node"].name))
 
     def err_response(self, session, where, err):
         if err:
