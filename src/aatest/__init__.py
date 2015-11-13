@@ -10,6 +10,9 @@ __author__ = 'rolandh'
 LOCAL_PATH = "export/"
 END_TAG = "==== END ===="
 
+CRYPTSUPPORT = {"none": "n", "signing": "s", "encryption": "e"}
+
+
 class AATestError(Exception):
     pass
 
@@ -82,7 +85,7 @@ class Trace(object):
     def __getitem__(self, item):
         return self.trace[item]
 
-    def next(self):
+    def __next__(self):
         for line in self.trace:
             yield line
 
@@ -143,12 +146,12 @@ def exception_trace(tag, exc, log=None):
         log.error("[%s] Exception: %s" % (tag, exc))
     else:
         if isinstance(exc, Exception):
-            print >> sys.stderr, "[%s] ExcList: %s" % (tag, "".join(message),)
+            print("[%s] ExcList: %s" % (tag, "".join(message),), file=sys.stderr)
         try:
-            print >> sys.stderr, "[%s] Exception: %s" % (tag, exc)
+            print("[%s] Exception: %s" % (tag, exc), file=sys.stderr)
         except UnicodeEncodeError:
-            print >> sys.stderr, "[%s] Exception: %s" % (
-                tag, exc.message.encode("utf-8", "replace"))
+            print("[%s] Exception: %s" % (
+                tag, exc.message.encode("utf-8", "replace")), file=sys.stderr)
 
 
 class Node():

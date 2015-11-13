@@ -1,14 +1,8 @@
-__author__ = 'rohe0002'
-
 import json
-from urlparse import urlparse
 import re
 
-from bs4 import BeautifulSoup
-from mechanize import ParseResponseEx
-from mechanize import AmbiguityError
-from mechanize._form import ControlNotFoundError
-from mechanize._form import ListControl
+from urllib.parse import urlparse
+from robobrowser import RoboBrowser
 
 NO_CTRL = "No submit control with the name='%s' and value='%s' could be found"
 
@@ -41,7 +35,7 @@ class RResponse():
         self._resp = resp
         self.index = 0
         self.text = resp.text
-        if isinstance(self.text, unicode):
+        if isinstance(self.text, str):
             if resp.encoding.upper() == "UTF-8":
                 self.text = self.text.encode("utf-8")
             else:
@@ -93,25 +87,25 @@ class RResponse():
 
 
 class Interaction(object):
-    def __init__(self, httpc, interactions=None):
+    def __init__(self, httpc, interactions=None, verify_ssl=True):
         self.httpc = httpc
+        self.browser = RoboBrowser()
         self.interactions = interactions
+        self.verify_ssl = verify_ssl
 
-    def pick_interaction(self, _base="", content="", req=None):
+    def pick_interaction(self, response, base):
         if self.interactions is None:
             return None
 
-        unic = content
-        if content:
-            _bs = BeautifulSoup(content)
-        else:
-            _bs = None
+        self.browser._update_state(response)
+        _bs = self.browser.parsed
+        unic = ""
 
         for interaction in self.interactions:
             _match = 0
-            for attr, val in interaction["matches"].items():
+            for attr, val in list(interaction["matches"].items()):
                 if attr == "url":
-                    if val == _base:
+                    if val == base:
                         _match += 1
                 elif attr == "title":
                     if _bs is None:
@@ -122,8 +116,7 @@ class Interaction(object):
                         _match += 1
                     else:
                         _c = _bs.title.contents
-                        if isinstance(_c, list) and not isinstance(_c,
-                                                                   basestring):
+                        if isinstance(_c, list) and not isinstance(_c, str):
                             for _line in _c:
                                 if val in _line:
                                     _match += 1
@@ -137,28 +130,16 @@ class Interaction(object):
 
         raise InteractionNeeded("No interaction matched")
 
-    def pick_form(self, response, url=None, **kwargs):
+    def pick_form(self, forms, **kwargs):
         """
         Picks which form in a web-page that should be used
 
-        :param response: A HTTP request response. A DResponse instance
-        :param content: The HTTP response content
-        :param url: The url the request was sent to
-        :return: The picked form or None of no form matched the criteria.
+        :param forms: A list of robobrowser.Forms instances
+        :return: The picked form or None if no form matched the criteria.
         """
 
-        forms = ParseResponseEx(response)
-        if not forms:
-            raise FlowException(content=response.text, url=url)
-
-        #if len(forms) == 1:
-        #    return forms[0]
-        #else:
-
         _form = None
-        # ignore the first form, because I use ParseResponseEx which adds
-        # one form at the top of the list
-        forms = forms[1:]
+
         if len(forms) == 1:
             _form = forms[0]
         else:
@@ -167,10 +148,10 @@ class Interaction(object):
                 for form in forms:
                     if _form:
                         break
-                    for key, _ava in _dict.items():
+                    for key, _ava in list(_dict.items()):
                         if key == "form":
-                            _keys = form.attrs.keys()
-                            for attr, val in _ava.items():
+                            _keys = list(form.attrs.keys())
+                            for attr, val in list(_ava.items()):
                                 if attr in _keys and val == form.attrs[attr]:
                                     _form = form
                         elif key == "control":
@@ -178,14 +159,14 @@ class Interaction(object):
                             _default = _ava["value"]
                             try:
                                 orig_val = form[prop]
-                                if isinstance(orig_val, basestring):
+                                if isinstance(orig_val, str):
                                     if orig_val == _default:
                                         _form = form
                                 elif _default in orig_val:
                                     _form = form
                             except KeyError:
                                 pass
-                            except ControlNotFoundError:
+                            except Exception as err:
                                 pass
                         elif key == "method":
                             if form.method == _ava:
@@ -200,51 +181,51 @@ class Interaction(object):
 
         return _form
 
-    def do_click(self, form, **kwargs):
-        """
-        Emulates the user clicking submit on a form.
+    # def do_click(self, form, **kwargs):
+    #     """
+    #     Emulates the user clicking submit on a form.
+    #
+    #     :param form: The form that should be submitted
+    #     :return: What do_request() returns
+    #     """
+    #
+    #     if "click" in kwargs:
+    #         request = None
+    #         _name = kwargs["click"]
+    #         try:
+    #             _ = form.find_control(name=_name)
+    #             request = form.click(name=_name)
+    #         except AmbiguityError:
+    #             # more than one control with that name
+    #             _val = kwargs["set"][_name]
+    #             _nr = 0
+    #             while True:
+    #                 try:
+    #                     cntrl = form.find_control(name=_name, nr=_nr)
+    #                     if cntrl.value == _val:
+    #                         request = form.click(name=_name, nr=_nr)
+    #                         break
+    #                     else:
+    #                         _nr += 1
+    #                 except ControlNotFoundError:
+    #                     raise Exception(NO_CTRL % (_name, _val))
+    #     else:
+    #         request = form.click()
+    #
+    #     headers = {"Referer": kwargs["location"]}
+    #
+    #     for key, val in list(request.unredirected_hdrs.items()):
+    #         headers[key] = val
+    #
+    #     url = request._Request__original
+    #
+    #     if form.method == "POST":
+    #         return self.httpc.send(url, "POST", data=request.data,
+    #                                headers=headers)
+    #     else:
+    #         return self.httpc.send(url, "GET", headers=headers)
 
-        :param form: The form that should be submitted
-        :return: What do_request() returns
-        """
-
-        if "click" in kwargs:
-            request = None
-            _name = kwargs["click"]
-            try:
-                _ = form.find_control(name=_name)
-                request = form.click(name=_name)
-            except AmbiguityError:
-                # more than one control with that name
-                _val = kwargs["set"][_name]
-                _nr = 0
-                while True:
-                    try:
-                        cntrl = form.find_control(name=_name, nr=_nr)
-                        if cntrl.value == _val:
-                            request = form.click(name=_name, nr=_nr)
-                            break
-                        else:
-                            _nr += 1
-                    except ControlNotFoundError:
-                        raise Exception(NO_CTRL % (_name, _val))
-        else:
-            request = form.click()
-
-        headers = {"Referer": kwargs["location"]}
-
-        for key, val in request.unredirected_hdrs.items():
-            headers[key] = val
-
-        url = request._Request__original
-
-        if form.method == "POST":
-            return self.httpc.send(url, "POST", data=request.data,
-                                   headers=headers)
-        else:
-            return self.httpc.send(url, "GET", headers=headers)
-
-    def select_form(self, orig_response, **kwargs):
+    def select_form(self, response, **kwargs):
         """
         Pick a form on a web page, possibly enter some information and submit
         the form.
@@ -252,42 +233,45 @@ class Interaction(object):
         :param orig_response: The original response (as returned by requests)
         :return: The response do_click() returns
         """
-        response = RResponse(orig_response)
-        try:
-            _url = response.url
-        except KeyError:
-            _url = kwargs["location"]
+        self.browser._update_state(response)
+        forms = self.browser.get_forms()
+        form = self.pick_form(forms, **kwargs)
 
-        form = self.pick_form(response, _url, **kwargs)
-        #form.backwards_compatible = False
-        if not form:
+        if not forms:
             raise Exception("Can't pick a form !!")
 
         if "set" in kwargs:
-            for key, val in kwargs["set"].items():
+            for key, val in list(kwargs["set"].items()):
                 if key.startswith("_"):
                     continue
                 if "click" in kwargs and kwargs["click"] == key:
                     continue
 
                 try:
-                    form[key] = val
-                except (ControlNotFoundError, ValueError):
+                    form[key].value = val
+                except (ValueError):
                     pass
-                except TypeError:
-                    cntrl = form.find_control(key)
-                    if isinstance(cntrl, ListControl):
-                        form[key] = [val]
-                    else:
-                        raise
+                except Exception as err:
+                    raise
+                    # cntrl = form.find_control(key)
+                    # if isinstance(cntrl, ListControl):
+                    #     form[key] = [val]
+                    # else:
+                    #     raise
 
-        if form.action in kwargs["conv"].my_endpoints():
+        if form.action in kwargs["tester"].my_endpoints():
             _res = {}
-            for cnt in form.controls:
-                _res[cnt.attrs["name"]] = cnt.attrs["value"]
+            for name, cnt in form.fields.items():
+                _res[name] = cnt.value
             return _res
 
-        return self.do_click(form, **kwargs)
+        try:
+            requests_args = kwargs["requests_args"]
+        except KeyError:
+            requests_args = {}
+
+        self.browser.submit_form(form, **requests_args)
+        return self.browser.state.response
 
     #noinspection PyUnusedLocal
     def chose(self, orig_response, path, **kwargs):
@@ -339,34 +323,19 @@ class Interaction(object):
         url = matches[0]
         return self.httpc.send(url, "GET")
 
-    def post_form(self, orig_response, **kwargs):
+    def post_form(self, response, **kwargs):
         """
-        The same as select_form but with no possibility of change the content
+        The same as select_form but with no possibility of changing the content
         of the form.
 
-        :param httpc: A HTTP Client instance
-        :param orig_response: The original response (as returned by requests)
-        :param content: The content of the response
-        :return: The response do_click() returns
+        :param response: The original response (as returned by requests)
+        :return: The response submit_form() returns
         """
-        response = RResponse(orig_response)
 
         form = self.pick_form(response, **kwargs)
 
-        return self.do_click(form, **kwargs)
+        return self.browser.submit_form(form)
 
-    #noinspection PyUnusedLocal
-    # def parse(self, orig_response, **kwargs):
-    #     # content is a form from which I get the SAMLResponse
-    #     response = RResponse(orig_response)
-    #
-    #     form = self.pick_form(response, **kwargs)
-    #     #form.backwards_compatible = False
-    #     if not form:
-    #         raise InteractionNeeded("Can't pick a form !!")
-    #
-    #     return {"SAMLResponse": form["SAMLResponse"],
-    #             "RelayState": form["RelayState"]}
 
     #noinspection PyUnusedLocal
     def interaction(self, args):
@@ -399,9 +368,9 @@ class Action(object):
     def post_op(self, result, conv, args):
         pass
 
-    def __call__(self, httpc, conv, trace, location, response, content,
-                 features):
-        intact = Interaction(httpc)
+    def __call__(self, tester, location, response, features, **kwargs):
+        _conv = tester.conv
+        intact = _conv.interaction
         function = intact.interaction(self.args)
 
         try:
@@ -409,15 +378,16 @@ class Action(object):
         except (KeyError, AttributeError):
             _args = {}
 
-        _args["_trace_"] = trace
+        _args["_trace_"] = _conv.trace
         _args["location"] = location
         _args["features"] = features
-        _args["conv"] = conv
+        _args["tester"] = tester
+        _args["requests_args"] = kwargs
 
-        if trace:
-            trace.reply("FUNCTION: %s" % function.__name__)
-            trace.reply("ARGS: %s" % _args)
+        if _conv.trace:
+            _conv.trace.reply("FUNCTION: %s" % function.__name__)
+            _conv.trace.reply("ARGS: %s" % _args)
 
         result = function(response, **_args)
-        self.post_op(result, conv, _args)
+        self.post_op(result, _conv, _args)
         return result

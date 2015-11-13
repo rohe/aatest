@@ -20,6 +20,7 @@ __author__ = 'roland'
 
 logger = logging.getLogger(__name__)
 
+
 class Conversation(object):
     def __init__(self, flow, client, msg_factory, interaction=None,
                  check_factory=None, features=None, trace_cls=Trace,
@@ -41,6 +42,8 @@ class Conversation(object):
         self.exception = None
         self.timestamp = []
         self.protocol_response = []
+        self.protocol_request = []
+        self.operation = None
         try:
             self.callback_uris = extra_args["callback_uris"]
         except KeyError:

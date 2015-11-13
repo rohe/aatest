@@ -3,7 +3,7 @@ from aatest.verify import Verify
 
 
 def setup_logger(log, log_file_name="tt.log"):
-    #logger = logging.getLogger("")
+    # logger = logging.getLogger("")
     hdlr = logging.FileHandler(log_file_name)
     base_formatter = logging.Formatter(
         "%(asctime)s %(name)s:%(levelname)s %(message)s")
@@ -12,8 +12,9 @@ def setup_logger(log, log_file_name="tt.log"):
     log.addHandler(hdlr)
     log.setLevel(logging.DEBUG)
 
+
 def make_list(flows, profile, map_prof, **kw_args):
-    f_names = flows.keys()
+    f_names = list(flows.keys())
     f_names.sort()
     flow_names = []
     for k in kw_args["orddesc"]:
@@ -35,8 +36,13 @@ def make_list(flows, profile, map_prof, **kw_args):
 
     return res
 
+
+def make_client(**kw_args):
+    raise NotImplemented()
+
+
 def node_dict(flows, lst):
-    return dict([(l,flows[l]) for l in lst])
+    return dict([(l, flows[l]) for l in lst])
 
 
 def test_summation(conv, sid):
@@ -58,7 +64,7 @@ def test_summation(conv, sid):
 
 
 def run_flow(profiles, conv, test_id, conf, profile, chk_factory, index=0):
-    print("=="+test_id)
+    print(("==" + test_id))
     conv.test_id = test_id
     conv.conf = conf
 

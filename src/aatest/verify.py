@@ -37,14 +37,15 @@ class Verify(object):
                 raise FatalError(stat["message"])
 
     def do_check(self, test, **kwargs):
-        if isinstance(test, basestring):
+        if isinstance(test, str):
             chk = self.check_factory(test)(**kwargs)
         else:
             chk = test(**kwargs)
 
         if chk.__class__.__name__ not in self.ignore_check:
             stat = chk(self.conv, self.conv.test_output)
-            self.check_severity(stat)
+            if stat:
+                self.check_severity(stat)
 
     def err_check(self, test, err=None, bryt=True):
         if err:
@@ -58,7 +59,7 @@ class Verify(object):
 
     def test_sequence(self, sequence):
         if isinstance(sequence, dict):
-            for test, kwargs in sequence.items():
+            for test, kwargs in list(sequence.items()):
                 self.do_check(test, **kwargs)
         else:
             for test in sequence:

@@ -87,7 +87,7 @@ class Operation(object):
         if self.skip:  # Don't bother
             return
 
-        for op, arg in self.funcs.items():
+        for op, arg in list(self.funcs.items()):
             op(self, arg)
 
     def map_profile(self, profile_map):
@@ -99,7 +99,7 @@ class Operation(object):
             if funcs is None:
                 self.skip = True
             else:
-                for op, arg in funcs.items():
+                for op, arg in list(funcs.items()):
                     op(self, arg)
 
     def op_setup(self):
@@ -137,6 +137,9 @@ class Operation(object):
                 self.conv.trace.reply(res)
 
         return res
+
+    def handle_response(self, *args):
+        raise NotImplemented
 
 
 class Notice(Operation):

@@ -1,16 +1,12 @@
 import logging
-from urlparse import parse_qs
+from urllib.parse import parse_qs
 from oic.utils.http_util import Redirect, Response
 from oic.utils.http_util import get_post
 
-from aatest import exception_trace, END_TAG, Break
+from aatest import exception_trace, END_TAG, Break, CRYPTSUPPORT
 from aatest.conversation import Conversation
 from aatest.verify import Verify
-from oidctest import CRYPTSUPPORT
-
-from oidctest.common import make_client, Trace
-from oidctest.oper import Done
-from oidctest.prof_util import map_prof
+from aatest.session import Done
 
 __author__ = 'roland'
 
@@ -25,7 +21,8 @@ def get_redirect_uris(cinfo):
 
 class Tester(object):
     def __init__(self, io, sh, profiles, profile, flows, check_factory,
-                 msg_factory, cache, **kwargs):
+                 msg_factory, cache, make_client, map_prof,
+                 trace_cls, **kwargs):
         self.io = io
         self.sh = sh
         self.profiles = profiles
@@ -36,10 +33,15 @@ class Tester(object):
         self.chk_factory = check_factory
         self.cache = cache
         self.kwargs = kwargs
+        self.make_client = make_client
+        self.map_prof = map_prof
+        self.trace_cls = trace_cls
+        self.cjar = {}
 
     def match_profile(self, test_id):
         _spec = self.flows[test_id]
-        return map_prof(self.profile.split("."), _spec["profile"].split("."))
+        return self.map_prof(self.profile.split("."),
+                             _spec["profile"].split("."))
 
     def run(self, test_id, cinfo, **kw_args):
         if not self.match_profile(test_id):
@@ -49,9 +51,9 @@ class Tester(object):
 
         self.sh.session_setup(path=test_id)
         _flow = self.flows[test_id]
-        _cli = make_client(**kw_args)
+        _cli = self.make_client(**kw_args)
         self.conv = Conversation(_flow, _cli, redirs, kw_args["msg_factory"],
-                                 trace_cls=Trace)
+                                 trace_cls=self.trace_cls)
         _cli.conv = self.conv
         self.conv.sequence = self.sh.session["sequence"]
         self.sh.session["conv"] = self.conv
@@ -70,7 +72,11 @@ class Tester(object):
     def run_flow(self, test_id, conf=None, index=0):
         logger.info("<=<=<=<=< %s >=>=>=>=>" % test_id)
         _ss = self.sh.session
-        _ss["node"].complete = False
+        try:
+            _ss["node"].complete = False
+        except KeyError:
+            pass
+
         self.conv.test_id = test_id
         self.conv.conf = conf
 
@@ -190,7 +196,7 @@ class WebTester(Tester):
         _flow = self.flows[test_id]
         _cli = make_client(**kw_args)
         self.conv = Conversation(_flow, _cli, redirs, kw_args["msg_factory"],
-                                 trace_cls=Trace)
+                                 trace_cls=self.trace_cls)
         _cli.conv = self.conv
         self.sh.session_setup(path=test_id)
         self.sh.session["conv"] = self.conv

@@ -1,4 +1,4 @@
-import cookielib
+import http.cookiejar
 import json
 import sys
 import traceback
@@ -42,9 +42,9 @@ class Conversation(object):
         self.expect_exception = expect_exception
         self.extra_args = extra_args
 
-        self.cjar = {"browser": cookielib.MozillaCookieJar(),
-                     "rp": cookielib.MozillaCookieJar(),
-                     "service": cookielib.MozillaCookieJar()}
+        self.cjar = {"browser": http.cookiejar.MozillaCookieJar(),
+                     "rp": http.cookiejar.MozillaCookieJar(),
+                     "service": http.cookiejar.MozillaCookieJar()}
 
         self.protocol_response = []
         self.last_response = None
@@ -87,7 +87,7 @@ class Conversation(object):
                 raise FatalError(stat["message"])
 
     def do_check(self, test, **kwargs):
-        if isinstance(test, basestring):
+        if isinstance(test, str):
             chk = self.check_factory(test)(**kwargs)
         else:
             chk = test(**kwargs)
@@ -108,7 +108,7 @@ class Conversation(object):
 
     def test_sequence(self, sequence):
         if isinstance(sequence, dict):
-            for test, kwargs in sequence.items():
+            for test, kwargs in list(sequence.items()):
                 self.do_check(test, **kwargs)
         else:
             for test in sequence:
@@ -403,7 +403,7 @@ class Conversation(object):
         self.client.client_id = state["client"]["client_id"]
         self.client.client_secret = state["client"]["client_secret"]
 
-        for key, val in pcr.items():
+        for key, val in list(pcr.items()):
             if key.endswith("_endpoint"):
                 setattr(self.client, key, val)
 

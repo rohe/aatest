@@ -1,11 +1,17 @@
 import copy
 import logging
-
-from oidctest.oper import Done
+from aatest import END_TAG
+from aatest.operation import Operation
 
 __author__ = 'roland'
 
 logger = logging.getLogger(__name__)
+
+
+class Done(Operation):
+    def run(self, *args, **kwargs):
+        self.conv.trace.info(END_TAG)
+
 
 class Node(object):
     def __init__(self, name, desc, mti=None):
@@ -34,7 +40,7 @@ class SessionHandler(object):
         logger.info("session_setup")
         if session is None:
             session = self.session
-        _keys = session.keys()
+        _keys = list(session.keys())
         for key in _keys:
             if key.startswith("_"):
                 continue
@@ -60,7 +66,7 @@ class SessionHandler(object):
         if profile is None:
             profile = self.profile
 
-        f_names = self.test_flows.keys()
+        f_names = list(self.test_flows.keys())
         f_names.sort()
         session["flow_names"] = []
         for k in self.orddesc:
@@ -86,7 +92,7 @@ class SessionHandler(object):
         if not session:
             session = self.session
 
-        _keys = session.keys()
+        _keys = list(session.keys())
         for key in _keys:
             if key.startswith("_"):
                 continue

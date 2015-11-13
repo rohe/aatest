@@ -2,7 +2,7 @@ __author__ = 'rohe0002'
 
 import json
 
-from urlparse import urlparse
+from urllib.parse import urlparse
 
 from mechanize import ParseResponseEx
 from mechanize._form import ControlNotFoundError, AmbiguityError
@@ -29,7 +29,7 @@ class DResponse():
         self._message = ""
         self.url = ""
         if kwargs:
-            for key, val in kwargs.items():
+            for key, val in list(kwargs.items()):
                 if val:
                     self.__setitem__(key, val)
 
@@ -152,10 +152,10 @@ def pick_form(response, content, url=None, **kwargs):
             for form in forms:
                 if _form:
                     break
-                for key, _ava in _dict.items():
+                for key, _ava in list(_dict.items()):
                     if key == "form":
-                        _keys = form.attrs.keys()
-                        for attr, val in _ava.items():
+                        _keys = list(form.attrs.keys())
+                        for attr, val in list(_ava.items()):
                             if attr in _keys and val == form.attrs[attr]:
                                 _form = form
                     elif key == "control":
@@ -163,7 +163,7 @@ def pick_form(response, content, url=None, **kwargs):
                         _default = _ava["value"]
                         try:
                             orig_val = form[prop]
-                            if isinstance(orig_val, basestring):
+                            if isinstance(orig_val, str):
                                 if orig_val == _default:
                                     _form = form
                             elif _default in orig_val:
@@ -219,7 +219,7 @@ def do_click(client, form, **kwargs):
         request = form.click()
 
     headers = {}
-    for key, val in request.unredirected_hdrs.items():
+    for key, val in list(request.unredirected_hdrs.items()):
         headers[key] = val
 
     url = request._Request__original
@@ -249,7 +249,7 @@ def select_form(client, orig_response, content, **kwargs):
     except KeyError:
         _url = kwargs["location"]
     # content is a form to be filled in and returned
-    if isinstance(content, unicode):
+    if isinstance(content, str):
         content = content.encode("utf-8")
 
     response = DResponse(status=orig_response.status_code, url=_url)
@@ -261,7 +261,7 @@ def select_form(client, orig_response, content, **kwargs):
         raise Exception("Can't pick a form !!")
 
     if "set" in kwargs:
-        for key, val in kwargs["set"].items():
+        for key, val in list(kwargs["set"].items()):
             if key.startswith("_"):
                 continue
             if "click" in kwargs and kwargs["click"] == key:
