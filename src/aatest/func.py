@@ -1,3 +1,6 @@
+import inspect
+import sys
+
 __author__ = 'roland'
 
 
@@ -54,3 +57,12 @@ def conditional_expect_exception(oper, args):
     except KeyError:
         if res is True:
             oper.expect_exception = exception
+
+
+def factory(name):
+    for fname, obj in inspect.getmembers(sys.modules[__name__]):
+        if inspect.isfunction(obj):
+            if fname == name:
+                return obj
+
+    return None
