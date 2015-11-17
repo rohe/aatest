@@ -154,7 +154,7 @@ def exception_trace(tag, exc, log=None):
                 tag, exc.message.encode("utf-8", "replace")), file=sys.stderr)
 
 
-class Node():
+class Node(object):
     def __init__(self, name, desc="", rmc=False, experr=False,
                  tests=None, **kwargs):
         self.name = name

@@ -56,8 +56,8 @@ class SessionHandler(object):
                 session["node"] = node
                 break
 
-        session["flow"] = self.test_flows[path]
-        session["sequence"] = copy.deepcopy(session["flow"]["sequence"])
+        session["flow"] = copy.deepcopy(self.test_flows[path])
+        session["sequence"] = session["flow"]["sequence"]
         session["sequence"].append(Done)
         session["index"] = index
         self.session = session

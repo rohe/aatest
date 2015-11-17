@@ -41,9 +41,13 @@ class IO(object):
 
 SIGN = {OK: "+", WARNING: "?", ERROR: "-", INCOMPLETE: "!"}
 
+
 class ClIO(IO):
     def flow_list(self, session):
         pass
+
+    def represent_result(self, info, session):
+        return represent_result(info, session)
 
     def dump_log(self, session, test_id):
         try:
@@ -51,7 +55,11 @@ class ClIO(IO):
         except KeyError:
             pass
         else:
-            _pi = self.profile_handler(session).get_profile_info(test_id)
+            try:
+                _pi = self.profile_handler(session).get_profile_info(test_id)
+            except Exception as err:
+                raise
+
             if _pi:
                 sline = 60*"="
                 output = ["%s: %s" % (k, _pi[k]) for k in ["Issuer", "Profile",
@@ -67,7 +75,8 @@ class ClIO(IO):
                     "test_output": _conv.test_output,
                     "trace": _conv.trace
                 }
-                output.append("RESULT: %s" % represent_result(info, session))
+                output.append(
+                    "RESULT: {}".format(self.represent_result(info, session)))
                 output.append("")
 
                 txt = "\n".join(output)

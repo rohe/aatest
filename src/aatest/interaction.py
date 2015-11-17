@@ -336,6 +336,8 @@ class Interaction(object):
 
         return self.browser.submit_form(form)
 
+    def response(self, response, **kwargs):
+        return {"text": response.text}
 
     #noinspection PyUnusedLocal
     def interaction(self, args):
@@ -344,8 +346,8 @@ class Interaction(object):
             return self.select_form
         elif _type == "link":
             return self.chose
-        #elif _type == "response":
-        #    return self.parse
+        elif _type == "response":
+           return self.response
         elif _type == "redirect":
             return self.redirect
         elif _type == "javascript_redirect":

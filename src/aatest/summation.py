@@ -73,8 +73,12 @@ def test_summation(test_output, sid):
     return info
 
 
-def represent_result(info, session):
-    _stat = evaluate(session, info)
+def represent_result(info, session, evaluate_func=None):
+    if evaluate_func is None:
+        _stat = evaluate(session, info)
+    else:
+        _stat = evaluate_func(session, info)
+
     if _stat == INCOMPLETE:
         return "PARTIAL RESULT"
 
