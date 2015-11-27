@@ -47,9 +47,10 @@ def node_dict(flows, lst):
 
 def test_summation(conv, sid):
     status = 0
-    for item in conv.test_output:
-        if item["status"] > status:
-            status = item["status"]
+    for item in conv.events.get('test_output'):
+        _item = item.data
+        if _item["status"] > status:
+            status = _item["status"]
 
     if status == 0:
         status = 1
@@ -57,7 +58,7 @@ def test_summation(conv, sid):
     info = {
         "id": sid,
         "status": status,
-        "tests": conv.test_output
+        "tests": [d.data for d in conv.events.get('test_output')]
     }
 
     return info

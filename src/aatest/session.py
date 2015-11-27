@@ -26,10 +26,10 @@ class Node(object):
 
 
 class SessionHandler(object):
-    def __init__(self, session, profiles, profile, flows, orddesc,
+    def __init__(self, session, profile, flows, orddesc,
                  **kwargs):
         self.session = session
-        self.profiles = profiles
+        #self.profiles = profiles
         self.profile = profile
         self.test_flows = flows
         #self.test_class = klass

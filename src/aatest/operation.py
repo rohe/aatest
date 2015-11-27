@@ -34,15 +34,18 @@ def request_with_client_http_session(instance, method, url, **kwargs):
 class Operation(object):
     _tests = {"pre": [], "post": []}
 
-    def __init__(self, conv, io, sh, profile, test_id, conf, funcs,
-                 check_factory, cache):
+    def __init__(self, conv, io, sh, profile='', test_id='', conf=None,
+                 funcs=None, check_factory=None, cache=None):
         self.conv = conv
         self.io = io
         self.sh = sh
-        self.funcs = funcs
+        self.funcs = funcs or {}
         self.test_id = test_id
         self.conf = conf
-        self.profile = profile.split('.')
+        try:
+            self.profile = profile.split('.')
+        except AttributeError:
+            self.profile = profile
         self.req_args = {}
         self.op_args = {}
         self.expect_exception = None
@@ -105,14 +108,15 @@ class Operation(object):
     def op_setup(self):
         pass
 
-    def setup(self, profile_map):
+    def setup(self, profile_map=None):
         """
         Order between setup methods are significant
 
         :param profile_map:
         :return:
         """
-        self.map_profile(profile_map)
+        if profile_map:
+            self.map_profile(profile_map)
         self.op_setup()
         self._setup()
 

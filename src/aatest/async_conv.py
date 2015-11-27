@@ -12,6 +12,7 @@ from aatest import FatalError
 from aatest import Break
 from aatest.check import ExpectedError
 from aatest.check import INTERACTION
+from aatest.events import Events
 from aatest.interaction import Interaction
 from aatest.interaction import Action
 from aatest.interaction import InteractionNeeded
@@ -34,7 +35,6 @@ class Conversation(object):
         self.client = client
         self.client_config = config
         self.trace = trace
-        self.test_output = []
         self.features = features
         self.verbose = verbose
         self.check_factory = check_factory
@@ -46,10 +46,7 @@ class Conversation(object):
                      "rp": http.cookiejar.MozillaCookieJar(),
                      "service": http.cookiejar.MozillaCookieJar()}
 
-        self.protocol_response = []
-        self.last_response = None
-        self.last_content = None
-        self.response = None
+        self.events = Events()
         self.interaction = Interaction(self.client, interaction)
         self.exception = None
         self.provider_info = self.client.provider_info or {}
@@ -58,7 +55,6 @@ class Conversation(object):
         self.login_page = ""
         self.sequence = {}
         self.flow_index = 0
-        self.position = None
         self.request_args = {}
         self.args = {}
         self.creq = None
@@ -93,14 +89,14 @@ class Conversation(object):
             chk = test(**kwargs)
 
         if chk.__class__.__name__ not in self.ignore_check:
-            stat = chk(self, self.test_output)
+            stat = chk(self, self.events.last('test_output').data)
             self.check_severity(stat)
 
     def err_check(self, test, err=None, bryt=True):
         if err:
             self.exception = err
         chk = self.check_factory(test)()
-        chk(self, self.test_output)
+        chk(self, self.events.last('test_output').data)
         if bryt:
             e = FatalError("%s" % err)
             e.trace = "".join(traceback.format_exception(*sys.exc_info()))
@@ -126,7 +122,7 @@ class Conversation(object):
 
     def for_me(self, response="", url=""):
         if not response:
-            response = self.last_response
+            response = self.events.last('response').data
         if not url:
             url = response.headers["location"]
         for redirect_uri in self.my_endpoints():
@@ -135,7 +131,7 @@ class Conversation(object):
         return False
 
     def intermit(self):
-        _response = self.last_response
+        _response = self.events.last('response').data
         if _response.status_code >= 400:
             done = True
         else:
@@ -172,9 +168,8 @@ class Conversation(object):
 
                     content = _response.text
                     self.trace.reply("CONTENT: %s" % content)
-                    self.position = url
-                    self.last_url = url
-                    self.last_content = content
+                    self.events.store('position', url)
+                    self.events.store('content', content)
                     self.response = _response
 
                     if _response.status_code >= 400:
@@ -216,13 +211,13 @@ class Conversation(object):
                 _response = _op(self.client, self, self.trace, url,
                                 _response, content, self.features)
                 if isinstance(_response, dict):
-                    self.last_response = _response
-                    self.last_content = _response
+                    self.events.store('response', _response)
+                    self.events.store('content', _response)
                     return _response
                 content = _response.text
-                self.position = url
-                self.last_content = content
-                self.response = _response
+                self.events.store('position', url)
+                self.events.store('content', content)
+                self.events.store('response', _response)
 
                 if _response.status_code >= 400:
                     break
@@ -231,16 +226,16 @@ class Conversation(object):
                 raise
             except Exception as err:
                 self.err_check("exception", err, False)
-                self.test_output.append(
-                    {"status": 3, "id": "Communication error",
-                     "message": "%s" % err})
+                self.events.store('test_output',
+                                  {"status": 3, "id": "Communication error",
+                                   "message": "%s" % err})
                 raise FatalError
 
-        self.last_response = _response
+        self.events.store('response', _response)
         try:
-            self.last_content = _response.text
+            self.events.store('content', _response.text)
         except AttributeError:
-            self.last_content = None
+            self.events.store('content', None)
 
     def init(self, phase):
         self.creq, self.cresp = phase
@@ -284,7 +279,8 @@ class Conversation(object):
     def do_query(self):
         self.setup_request()
         self.send()
-        if self.last_response.status_code in [301, 302, 303] and \
+        last_response = self.events.last('response').data
+        if last_response.status_code in [301, 302, 303] and \
                 not self.for_me():
             self.intermit()
         if not self.handle_result():
@@ -333,11 +329,12 @@ class Conversation(object):
             try:
                 self.do_query()
             except InteractionNeeded:
-                self.test_output.append({"status": INTERACTION,
-                                         "message": self.last_content,
-                                         "id": "exception",
-                                         "name": "interaction needed",
-                                         "url": self.position})
+                self.events.store('test_output',
+                                  {"status": INTERACTION,
+                                   "message": self.last_content,
+                                   "id": "exception",
+                                   "name": "interaction needed",
+                                   "url": self.position})
                 break
             except FatalError:
                 raise
@@ -372,7 +369,7 @@ class Conversation(object):
             "sequence": self.sequence["flow"],
             "flow_index": self.flow_index,
             "client_config": self.client_config,
-            "test_output": self.test_output
+            "test_output": self.events.get('test_output')
         }
 
         try:
@@ -386,32 +383,32 @@ class Conversation(object):
         _fh.write(txt)
         _fh.close()
 
-    def restore_state(self, filename):
-        txt = open(filename).read()
-        state = json.loads(txt)
-        self.trace.start = state["trace_log"]["start"]
-        self.trace.trace = state["trace_log"]["trace"]
-        self.flow_index = state["flow_index"]
-        self.client_config = state["client_config"]
-        self.test_output = state["test_output"]
-
-        self.client.behaviour = state["client"]["behaviour"]
-        self.client.keyjar.restore(state["client"]["keyjar"])
-        pcr = ProviderConfigurationResponse().from_json(
-            state["client"]["provider_info"])
-        self.client.provider_info = pcr
-        self.client.client_id = state["client"]["client_id"]
-        self.client.client_secret = state["client"]["client_secret"]
-
-        for key, val in list(pcr.items()):
-            if key.endswith("_endpoint"):
-                setattr(self.client, key, val)
-
-        try:
-            self.client.registration_response = RegistrationResponse().from_json(
-                state["client"]["registration_resp"])
-        except KeyError:
-            pass
+    # def restore_state(self, filename):
+    #     txt = open(filename).read()
+    #     state = json.loads(txt)
+    #     self.trace.start = state["trace_log"]["start"]
+    #     self.trace.trace = state["trace_log"]["trace"]
+    #     self.flow_index = state["flow_index"]
+    #     self.client_config = state["client_config"]
+    #     self.test_output = state["test_output"]
+    #
+    #     self.client.behaviour = state["client"]["behaviour"]
+    #     self.client.keyjar.restore(state["client"]["keyjar"])
+    #     pcr = ProviderConfigurationResponse().from_json(
+    #         state["client"]["provider_info"])
+    #     self.client.provider_info = pcr
+    #     self.client.client_id = state["client"]["client_id"]
+    #     self.client.client_secret = state["client"]["client_secret"]
+    #
+    #     for key, val in list(pcr.items()):
+    #         if key.endswith("_endpoint"):
+    #             setattr(self.client, key, val)
+    #
+    #     try:
+    #         self.client.registration_response = RegistrationResponse().from_json(
+    #             state["client"]["registration_resp"])
+    #     except KeyError:
+    #         pass
 
     def restart(self, state):
         pass

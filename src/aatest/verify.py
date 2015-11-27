@@ -43,7 +43,12 @@ class Verify(object):
             chk = test(**kwargs)
 
         if chk.__class__.__name__ not in self.ignore_check:
-            stat = chk(self.conv, self.conv.test_output)
+            try:
+                output = self.conv.events.last('test_output').data
+            except AttributeError:
+                output = None
+
+            stat = chk(self.conv, output)
             if stat:
                 self.check_severity(stat)
 
@@ -51,7 +56,7 @@ class Verify(object):
         if err:
             self.exception = err
         chk = self.check_factory(test)()
-        chk(self, self.conv.test_output)
+        chk(self, self.conv.events.last('test_output').data)
         if bryt:
             e = FatalError("%s" % err)
             e.trace = "".join(traceback.format_exception(*sys.exc_info()))

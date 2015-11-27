@@ -20,14 +20,11 @@ TEST_RESULTS = {OK: "OK", ERROR: "ERROR", WARNING: "WARNING",
 
 
 class IO(object):
-    def __init__(self, conf, flows, profile, profiles, operation,
+    def __init__(self, flows, profile,
                  check_factory, desc, profile_handler, cache=None, **kwargs):
-        self.conf = conf
         self.flows = flows
         self.cache = cache
         self.test_profile = profile
-        self.profiles = profiles
-        self.operation = operation
         self.profile_handler = profile_handler
         self.check_factory = check_factory
         self.desc = desc
@@ -68,11 +65,12 @@ class ClIO(IO):
                 output.extend(["", sline, ""])
                 output.extend(trace_output(_conv.trace))
                 output.extend(["", sline, ""])
-                output.extend(test_output(_conv.test_output))
+                dat = _conv.events.get_data('test_output')
+                output.extend(test_output(dat))
                 output.extend(["", sline, ""])
                 # and lastly the result
                 info = {
-                    "test_output": _conv.test_output,
+                    "test_output": dat,
                     "trace": _conv.trace
                 }
                 output.append(
@@ -86,7 +84,7 @@ class ClIO(IO):
     def result(self, session):
         _conv = session["conv"]
         info = {
-            "test_output": _conv.test_output,
+            "test_output": _conv.events.get_data('test_output'),
             "trace": _conv.trace
         }
         _state = evaluate(session, info)

@@ -9,9 +9,11 @@ from oic.oauth2 import ErrorResponse
 from oic.oauth2 import HttpError
 from oic.oauth2 import OtherError
 import sys
+import time
 
 from aatest import FatalError
 from aatest import Trace
+from aatest.events import Events
 from aatest.interaction import Action
 from aatest.interaction import Interaction
 from aatest.interaction import InteractionNeeded
@@ -29,21 +31,17 @@ class Conversation(object):
         self.client = client
         self.msg_factory = msg_factory
         self.trace = trace_cls()
-        self.qresponse = []
-        self.last_url = ""
         self.test_id = ""
         self.info = {}
-        self.test_output = []
         self.index = 0
         self.interaction = Interaction(self.client, interaction)
         self.check_factory = check_factory
         self.features = features
         self.extra_args = extra_args
         self.exception = None
-        self.timestamp = []
-        self.protocol_response = []
-        self.protocol_request = []
-        self.operation = None
+        self.events = Events()
+        self.sequence = []
+
         try:
             self.callback_uris = extra_args["callback_uris"]
         except KeyError:
@@ -59,7 +57,7 @@ class Conversation(object):
         if err:
             self.exception = err
         chk = self.check_factory(test)()
-        chk(self, self.test_output)
+        chk(self, self.events.last('test_output'))
         if bryt:
             e = FatalError("%s" % err)
             e.trace = "".join(traceback.format_exception(*sys.exc_info()))
@@ -81,12 +79,13 @@ class Conversation(object):
             "sequence": self.flow,
             "flow_index": self.index,
             "client_config": self.client.conf,
-            "test_output": self.test_output
+            "test_output": self.events.get('test_output')
         }
 
         try:
             state["client"][
-                "registration_resp"] = self.client.registration_response.to_json()
+                "registration_resp"] = \
+                self.client.registration_response.to_json()
         except AttributeError:
             pass
 
@@ -105,11 +104,11 @@ class Conversation(object):
                 self.dump_state(self.extra_args["break"])
                 exit(2)
 
-            self.position = url
+            self.events.store('position', url)
             self.trace.error("Page Content: %s" % content)
             raise
         except KeyError:
-            self.position = url
+            self.events.store('position', url)
             self.trace.error("Page Content: %s" % content)
             self.err_check("interaction-needed")
             raise
@@ -120,7 +119,7 @@ class Conversation(object):
         if len(_spec) > 2:
             self.trace.info(">> %s <<" % _spec["page-type"])
             if _spec["page-type"] == "login":
-                self.login_page = content
+                self.events.store('login_page', content)
 
         _op = Action(_spec["control"])
 
@@ -128,23 +127,23 @@ class Conversation(object):
             _response = _op(self.client, self, self.trace, url,
                             response, content, self.features)
             if isinstance(_response, dict):
-                self.last_response = _response
-                self.last_content = _response
+                self.events.store('response', _response)
+                # self.events.store('last_content', _response)
                 return _response
 
             content = _response.text
-            self.position = url
-            self.last_content = content
-            self.qresponse.append(_response)
+            self.events.store('position', url)
+            self.events.store('content', content)
+            self.events.store('response', _response)
             return _response
 
         except (FatalError, InteractionNeeded):
             raise
         except Exception as err:
             self.err_check("exception", err, False)
-            self.test_output.append(
-                {"status": 3, "id": "Communication error",
-                 "message": "%s" % err})
+            self.events.store('test_output',
+                              {"status": 3, "id": "Communication error",
+                               "message": "%s" % err})
             raise FatalError
 
     def intermit(self, response):
@@ -177,13 +176,14 @@ class Conversation(object):
                 else:
                     try:
                         response = self.client.send(
-                            url, "GET", headers={"Referer": self.last_url})
+                            url, "GET",
+                            headers={"Referer": self.events.last('position')})
                     except Exception as err:
                         raise FatalError("%s" % err)
 
                     content = response.text
                     self.trace.reply("CONTENT: %s" % content)
-                    self.qresponse.append(response)
+                    self.events.store('response', response)
 
                     if response.status_code >= 400:
                         done = True
@@ -211,7 +211,7 @@ class Conversation(object):
             logger.error("(%d) %s" % (reqresp.status_code, reqresp.text))
             raise ParseError("ERROR: Something went wrong: %s" % reqresp.text)
         elif reqresp.status_code in [400, 401]:
-            #expecting an error response
+            # expecting an error response
             if issubclass(response, ErrorResponse):
                 pass
         else:
@@ -227,5 +227,3 @@ class Conversation(object):
                 raise OtherError("Didn't expect a response body")
         else:
             return reqresp
-
-
