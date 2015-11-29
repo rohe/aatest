@@ -2,6 +2,9 @@ import time
 
 __author__ = 'roland'
 
+class NoSuchEvent(Exception):
+    pass
+
 
 class Event(object):
     def __init__(self, timestamp=0, typ='', data=None):
@@ -44,7 +47,11 @@ class Events(object):
         return [d.data for d in self.get(typ)]
 
     def last_item(self, typ):
-        return self.last(typ).data
+        ev = self.last(typ)
+        if ev:
+            return ev.data
+
+        raise NoSuchEvent(typ)
 
     def __len__(self):
         return len(self.events)

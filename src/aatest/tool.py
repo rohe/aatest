@@ -77,7 +77,7 @@ class Tester(object):
     def handle_response(self, resp, index):
         return None
 
-    def run_flow(self, test_id, conf=None, index=0):
+    def run_flow(self, test_id, index=0):
         logger.info("<=<=<=<=< %s >=>=>=>=>" % test_id)
         _ss = self.sh.session
         try:
@@ -86,7 +86,6 @@ class Tester(object):
             pass
 
         self.conv.test_id = test_id
-        self.conv.conf = conf
 
         if index >= len(self.conv.sequence):
             return None
@@ -100,12 +99,13 @@ class Tester(object):
                 funcs = {}
 
             logger.info("<--<-- {} --- {} -->-->".format(index, cls))
+            self.conv.events.store('operation', cls)
             try:
                 _oper = cls(conv=self.conv, io=self.io, sh=self.sh,
-                            profile=self.profile, test_id=test_id, conf=conf,
+                            profile=self.profile, test_id=test_id,
                             funcs=funcs, check_factory=self.chk_factory,
                             cache=self.cache)
-                self.conv.operation = _oper
+                # self.conv.operation = _oper
                 _oper.setup(profiles.PROFILEMAP)
                 resp = _oper()
             except Exception as err:

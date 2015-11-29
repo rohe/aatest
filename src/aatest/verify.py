@@ -19,22 +19,25 @@ class Verify(object):
         self.conv = conv
 
     def check_severity(self, stat):
-        if stat["status"] >= 4:
-            self.trace.error("WHERE: %s" % stat["id"])
-            self.trace.error("STATUS:%s" % STATUSCODE[stat["status"]])
+        if stat['status'] >= 4:
+            self.trace.error("WHERE: {}".format(stat['cid']))
+            self.trace.error("STATUS: {}".format(STATUSCODE[stat['status']]))
             try:
-                self.trace.error("HTTP STATUS: %s" % stat["http_status"])
+                self.trace.error("HTTP STATUS: {}".format(stat['http_status']))
             except KeyError:
                 pass
             try:
-                self.trace.error("INFO: %s" % (stat["message"],))
+                self.trace.error("INFO: {}".format(stat['message']))
             except KeyError:
                 pass
 
-            if not stat["mti"]:
-                raise Break(stat["message"])
-            else:
-                raise FatalError(stat["message"])
+            try:
+                if not stat['mti']:
+                    raise Break(stat['message'])
+                else:
+                    raise FatalError(stat['message'])
+            except KeyError:
+                pass
 
     def do_check(self, test, **kwargs):
         if isinstance(test, str):
@@ -49,6 +52,7 @@ class Verify(object):
                 output = None
 
             stat = chk(self.conv, output)
+            self.conv.events.store('check', (self.conv.test_id, test, stat))
             if stat:
                 self.check_severity(stat)
 

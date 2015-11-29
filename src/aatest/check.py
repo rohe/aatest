@@ -1,6 +1,8 @@
 import inspect
 import json
-#from oic.oauth2 import SUCCESSFUL
+import traceback
+import sys
+
 from oic.oauth2 import SUCCESSFUL
 from oic.oauth2.message import ErrorResponse
 from oic.oauth2.message import MissingRequiredAttribute
@@ -8,8 +10,6 @@ from oic.oic.message import AuthorizationResponse
 
 __author__ = 'rolandh'
 
-import traceback
-import sys
 
 INFORMATION = 0
 OK = 1
@@ -37,6 +37,26 @@ def get_protocol_response(conv, cls):
     return res
 
 
+class TestResult(object):
+    name = 'test_result'
+
+    def __init__(self, test_id, status, name, mti=False):
+        self.test_id = test_id
+        self.status = status
+        self.name = name
+        self.mti = mti
+        self.message = ''
+        self.http_status = 0
+
+    def __str__(self):
+        if self.status:
+            return '{}: status={}, message={}'.format(self.test_id,
+                                                      STATUSCODE[self.status],
+                                                      self.message)
+        else:
+            return '{}: status={}'.format(self.test_id, STATUSCODE[self.status])
+
+
 class Check(object):
     """ General test
     """
@@ -44,6 +64,7 @@ class Check(object):
     cid = "check"
     msg = "OK"
     mti = True
+    test_result_cls = TestResult
 
     def __init__(self, **kwargs):
         self._status = OK
@@ -64,25 +85,21 @@ class Check(object):
     def response(self, **kwargs):
         try:
             name = " ".join(
-                [s.strip() for s in self.__doc__.strip().split("\n")])
+                [str(s).strip() for s in self.__doc__.strip().split(b"\n")])
         except AttributeError:
             name = ""
 
-        res = {
-            "id": self.cid,
-            "status": self._status,
-            "name": name,
-            "mti": self.mti
-        }
+        res = self.test_result_cls(test_id=self.cid, status=self._status,
+                                   name=name, mti=self.mti)
 
         if self._message:
-            res["message"] = self._message
+            res.message = self._message
         else:
             if self._status != OK:
-                res["message"] = self.msg
+                res.message = self.msg
 
-        if kwargs:
-            res.update(kwargs)
+        for key, val in kwargs:
+            setattr(self, key, val)
 
         return res
 
@@ -249,7 +266,7 @@ class VerifyErrorResponse(ExpectedError):
             try:
                 err = ErrorResponse().deserialize(_query, "urlencoded")
                 err.verify()
-                #res["temp"] = err
+                # res["temp"] = err
                 res["message"] = err.to_dict()
             except Exception:
                 self._message = "Faulty error message"

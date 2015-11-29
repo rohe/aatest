@@ -84,6 +84,7 @@ def run_flow(profiles, conv, test_id, conf, profile, chk_factory, index=0):
         _oper = cls(conv=conv, profile=profile, test_id=test_id,
                     conf=conf, funcs=funcs, chk_factory=chk_factory)
         conv.operation = _oper
+        conv.events.store('operation', _oper)
         _oper.setup(profiles.PROFILEMAP)
         _oper()
 
