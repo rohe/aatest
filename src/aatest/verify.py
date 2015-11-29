@@ -1,12 +1,15 @@
+import logging
 import sys
 import traceback
 
-from aatest import Break
+from aatest import Break, exception_trace
 from aatest import FatalError
 from aatest.check import STATUSCODE
 from aatest.check import ExpectedError
 
 __author__ = 'roland'
+
+logger = logging.getLogger(__name__)
 
 
 class Verify(object):
@@ -40,6 +43,7 @@ class Verify(object):
                 pass
 
     def do_check(self, test, **kwargs):
+        logger.debug("do_check({}, {})".format(test, kwargs))
         if isinstance(test, str):
             chk = self.check_factory(test)(**kwargs)
         else:
@@ -51,10 +55,15 @@ class Verify(object):
             except AttributeError:
                 output = None
 
-            stat = chk(self.conv, output)
-            self.conv.events.store('check', (self.conv.test_id, test, stat))
-            if stat:
-                self.check_severity(stat)
+            try:
+                stat = chk(self.conv, output)
+            except Exception as err:
+                exception_trace('do_check', err, logger)
+                raise
+            else:
+                self.conv.events.store('check', (self.conv.test_id, test, stat))
+                if stat:
+                    self.check_severity(stat)
 
     def err_check(self, test, err=None, bryt=True):
         if err:

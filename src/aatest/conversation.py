@@ -30,7 +30,7 @@ class Conversation(object):
         self.flow = flow
         self.client = client
         self.msg_factory = msg_factory
-        self.trace = trace_cls()
+        self.trace = trace_cls(True)
         self.test_id = ""
         self.info = {}
         self.index = 0
@@ -46,6 +46,8 @@ class Conversation(object):
             self.callback_uris = extra_args["callback_uris"]
         except KeyError:
             pass
+
+        self.trace.info('Conversation initiated')
 
     def for_me(self, url):
         for cb in self.callback_uris:

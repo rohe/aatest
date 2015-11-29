@@ -41,6 +41,32 @@ class RequirementsNotMet(Exception):
     pass
 
 
+def as_bytes(s):
+    """
+    Convert an unicode string to bytes.
+    :param s: Unicode / bytes string
+    :return: bytes string
+    """
+    try:
+        s = s.encode("utf-8", 'replace')
+    except (AttributeError, UnicodeDecodeError):
+        pass
+    return s
+
+
+def as_unicode(b):
+    """
+    Convert a byte string to a unicode string
+    :param b: byte string
+    :return: unicode string
+    """
+    try:
+        b = b.decode()
+    except (AttributeError, UnicodeDecodeError):
+        pass
+    return b
+
+
 class Trace(object):
     def __init__(self, absolut_start=False):
         self.trace = []
@@ -77,7 +103,7 @@ class Trace(object):
         self.trace.append("%f [WARNING] %s" % (delta, msg))
 
     def __str__(self):
-        return "\n". join([t.encode("utf-8", 'replace') for t in self.trace])
+        return "\n". join([as_unicode(t) for t in self.trace])
 
     def clear(self):
         self.trace = []
