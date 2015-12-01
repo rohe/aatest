@@ -161,7 +161,7 @@ def get_page(url):
     if resp.status_code == 200:
         return resp.text
     else:
-        raise HttpError(resp.status)
+        raise HttpError(resp.status_code)
 
 
 def exception_trace(tag, exc, log=None):
@@ -172,7 +172,8 @@ def exception_trace(tag, exc, log=None):
         log.error("[%s] Exception: %s" % (tag, exc))
     else:
         if isinstance(exc, Exception):
-            print("[%s] ExcList: %s" % (tag, "".join(message),), file=sys.stderr)
+            print("[%s] ExcList: %s" % (tag, "".join(message),),
+                  file=sys.stderr)
         try:
             print("[%s] Exception: %s" % (tag, exc), file=sys.stderr)
         except UnicodeEncodeError:
