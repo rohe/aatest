@@ -6,6 +6,7 @@ from aatest import Break, exception_trace
 from aatest import FatalError
 from aatest.check import STATUSCODE
 from aatest.check import ExpectedError
+from aatest.check import TestResult
 
 __author__ = 'roland'
 
@@ -22,7 +23,30 @@ class Verify(object):
         self.conv = conv
 
     def check_severity(self, stat):
-        if stat['status'] >= 4:
+        if isinstance(stat, TestResult):
+            if stat.status >= 4:
+                try:
+                    self.trace.error("WHERE: {}".format(stat.cid))
+                except AttributeError:
+                    pass
+                self.trace.error("STATUS: {}".format(STATUSCODE[stat.status]))
+                try:
+                    self.trace.error("HTTP STATUS: {}".format(stat.http_status))
+                except AttributeError:
+                    pass
+                try:
+                    self.trace.error("INFO: {}".format(stat.message))
+                except KeyError:
+                    pass
+
+                try:
+                    if not stat.mti:
+                        raise Break(stat.message)
+                    else:
+                        raise FatalError(stat.message)
+                except KeyError:
+                    pass
+        elif stat['status'] >= 4:
             self.trace.error("WHERE: {}".format(stat['cid']))
             self.trace.error("STATUS: {}".format(STATUSCODE[stat['status']]))
             try:

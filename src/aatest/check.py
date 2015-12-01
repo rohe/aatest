@@ -47,6 +47,7 @@ class TestResult(object):
         self.mti = mti
         self.message = ''
         self.http_status = 0
+        self.cid = ''
 
     def __str__(self):
         if self.status:
