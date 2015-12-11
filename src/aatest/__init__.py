@@ -7,6 +7,7 @@ from subprocess import Popen, PIPE
 from oic.oauth2 import HttpError
 
 __author__ = 'rolandh'
+__version__ = "0.1.0"
 
 LOCAL_PATH = "export/"
 END_TAG = "==== END ===="

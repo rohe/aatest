@@ -14,14 +14,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import re
 
 from setuptools import setup
 
 __author__ = 'rohe0002'
 
+version = ''
+with open('src/saml2/__init__.py', 'r') as fd:
+    version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
+                        fd.read(), re.MULTILINE).group(1)
+
 setup(
     name="aatest",
-    version="0.1.0",
+    version=version,
     description="Test framework for testing authentication and authorization "
                 "protocols",
     author="Roland Hedberg",
@@ -36,8 +42,7 @@ setup(
     install_requires=[
         "argparse",
         "requests >= 2.0.0",
-        "beautifulsoup4",
-        "mechanize>=0.2.6.dev-20121117"
+        "robobrowser",
     ],
     zip_safe=False,
 )
