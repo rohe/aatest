@@ -1,5 +1,4 @@
 import logging
-from saml2test import profiles
 
 from aatest import exception_trace
 from aatest import END_TAG
@@ -25,7 +24,7 @@ class ConfigurationError(Exception):
 
 class Tester(object):
     def __init__(self, io, sh, profile, flows, check_factory,
-                 msg_factory, cache, make_client, map_prof,
+                 msg_factory, cache, make_entity, map_prof,
                  trace_cls, **kwargs):
         self.io = io
         self.sh = sh
@@ -36,7 +35,7 @@ class Tester(object):
         self.chk_factory = check_factory
         self.cache = cache
         self.kwargs = kwargs
-        self.make_client = make_client
+        self.make_entity = make_entity
         self.map_prof = map_prof
         self.trace_cls = trace_cls
         self.cjar = {}
@@ -54,7 +53,7 @@ class Tester(object):
 
         self.sh.session_setup(path=test_id)
         _flow = self.flows[test_id]
-        _cli = self.make_client(**kw_args)
+        _cli = self.make_entity(**kw_args)
         self.conv = Conversation(_flow, _cli, redirs, kw_args["msg_factory"],
                                  trace_cls=self.trace_cls)
         _cli.conv = self.conv
@@ -74,10 +73,10 @@ class Tester(object):
             self.io.dump_log(self.sh.session, test_id)
             return self.io.err_response(self.sh.session, "run", err)
 
-    def handle_response(self, resp, index):
+    def handle_response(self, resp, index, oper=None):
         return None
 
-    def run_flow(self, test_id, index=0):
+    def run_flow(self, test_id, index=0, profiles=None):
         logger.info("<=<=<=<=< %s >=>=>=>=>" % test_id)
         _ss = self.sh.session
         try:
@@ -106,14 +105,19 @@ class Tester(object):
                             funcs=funcs, check_factory=self.chk_factory,
                             cache=self.cache)
                 # self.conv.operation = _oper
-                _oper.setup(profiles.PROFILEMAP)
+                if profiles:
+                    profile_map = profiles.PROFILEMAP
+                else:
+                    profile_map = None
+                _oper.setup(profile_map)
                 resp = _oper()
             except Exception as err:
+                exception_trace('run_flow', err)
                 self.sh.session["index"] = index
                 return self.io.err_response(self.sh.session, "run_sequence",
                                             err)
             else:
-                resp = self.handle_response(resp, index)
+                resp = self.handle_response(resp, index, _oper)
                 if resp:
                     return self.io.respond(resp)
 

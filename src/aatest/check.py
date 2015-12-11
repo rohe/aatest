@@ -2,11 +2,6 @@ import inspect
 import traceback
 import sys
 
-# from oic.oauth2 import SUCCESSFUL
-# from oic.oauth2.message import ErrorResponse
-# from oic.oauth2.message import MissingRequiredAttribute
-# from oic.oic.message import AuthorizationResponse
-
 __author__ = 'rolandh'
 
 
@@ -188,7 +183,7 @@ class CheckHTTPResponse(CriticalError):
     """
     Checks that the HTTP response status is within the 200 or 300 range
     """
-    cid = "check-http-response"
+    cid = "check_http_response"
     msg = "OP error"
 
     def _func(self, conv):

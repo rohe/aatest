@@ -1,3 +1,4 @@
+import logging
 import time
 import traceback
 import requests
@@ -38,6 +39,10 @@ class NotSupported(AATestError):
 
 
 class RequirementsNotMet(Exception):
+    pass
+
+
+class CheckError(Exception):
     pass
 
 
@@ -203,3 +208,16 @@ def get_node(tests, nid):
         return l[0]
     except (ValueError, IndexError):
         return None
+
+
+class ContextFilter(logging.Filter):
+    """
+    This is a filter which injects time laps information into the log.
+    """
+
+    def start(self):
+        self.start = time.time()
+
+    def filter(self, record):
+        record.delta = time.time() - self.start
+        return True

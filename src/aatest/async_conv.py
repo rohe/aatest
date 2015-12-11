@@ -32,8 +32,8 @@ class Conversation(object):
                  check_factory=None, msg_factory=None,
                  features=None, verbose=False, expect_exception=None,
                  **extra_args):
-        self.client = client
-        self.client_config = config
+        self.entity = client
+        self.entity_config = config
         self.trace = trace
         self.features = features
         self.verbose = verbose
@@ -47,9 +47,9 @@ class Conversation(object):
                      "service": http.cookiejar.MozillaCookieJar()}
 
         self.events = Events()
-        self.interaction = Interaction(self.client, interaction)
+        self.interaction = Interaction(self.entity, interaction)
         self.exception = None
-        self.provider_info = self.client.provider_info or {}
+        self.provider_info = self.entity.provider_info or {}
         self.interact_done = []
         self.ignore_check = []
         self.login_page = ""
@@ -156,12 +156,12 @@ class Conversation(object):
 
                 # If back to me
                 if self.for_me(_response):
-                    self.client.cookiejar = self.cjar["rp"]
+                    self.entity.cookiejar = self.cjar["rp"]
                     done = True
                     break
                 else:
                     try:
-                        _response = self.client.send(
+                        _response = self.entity.send(
                             url, "GET", headers={"Referer": self.last_url})
                     except Exception as err:
                         raise FatalError("%s" % err)
@@ -208,7 +208,7 @@ class Conversation(object):
             _op = Action(_spec["control"])
 
             try:
-                _response = _op(self.client, self, self.trace, url,
+                _response = _op(self.entity, self, self.trace, url,
                                 _response, content, self.features)
                 if isinstance(_response, dict):
                     self.events.store('response', _response)
@@ -263,10 +263,10 @@ class Conversation(object):
 
         # The authorization dance is all done through the browser
         if req.request == "AuthorizationRequest":
-            self.client.cookiejar = self.cjar["browser"]
+            self.entity.cookiejar = self.cjar["browser"]
         # everything else by someone else, assuming the RP
         else:
-            self.client.cookiejar = self.cjar["rp"]
+            self.entity.cookiejar = self.cjar["rp"]
 
         self.req = req
 
@@ -323,8 +323,8 @@ class Conversation(object):
             except KeyError:
                 pass
             else:
-                self.client.cookiejar = self.cjar["browser"]
-                self.client.load_cookies_from_file(_kaka.name)
+                self.entity.cookiejar = self.cjar["browser"]
+                self.entity.load_cookies_from_file(_kaka.name)
 
             try:
                 self.do_query()
@@ -359,22 +359,22 @@ class Conversation(object):
     def dump_state(self, filename):
         state = {
             "client": {
-                "behaviour": self.client.behaviour,
-                "keyjar": self.client.keyjar.dump(),
-                "provider_info": self.client.provider_info.to_json(),
-                "client_id": self.client.client_id,
-                "client_secret": self.client.client_secret,
+                "behaviour": self.entity.behaviour,
+                "keyjar": self.entity.keyjar.dump(),
+                "provider_info": self.entity.provider_info.to_json(),
+                "client_id": self.entity.client_id,
+                "client_secret": self.entity.client_secret,
             },
             "trace_log": {"start": self.trace.start, "trace": self.trace.trace},
             "sequence": self.sequence["flow"],
             "flow_index": self.flow_index,
-            "client_config": self.client_config,
+            "entity_config": self.entity_config,
             "test_output": self.events.get('test_output')
         }
 
         try:
             state["client"][
-                "registration_resp"] = self.client.registration_response.to_json()
+                "registration_resp"] = self.entity.registration_response.to_json()
         except AttributeError:
             pass
 
@@ -389,23 +389,23 @@ class Conversation(object):
     #     self.trace.start = state["trace_log"]["start"]
     #     self.trace.trace = state["trace_log"]["trace"]
     #     self.flow_index = state["flow_index"]
-    #     self.client_config = state["client_config"]
+    #     self.entity_config = state["entity_config"]
     #     self.test_output = state["test_output"]
     #
-    #     self.client.behaviour = state["client"]["behaviour"]
-    #     self.client.keyjar.restore(state["client"]["keyjar"])
+    #     self.entity.behaviour = state["client"]["behaviour"]
+    #     self.entity.keyjar.restore(state["client"]["keyjar"])
     #     pcr = ProviderConfigurationResponse().from_json(
     #         state["client"]["provider_info"])
-    #     self.client.provider_info = pcr
-    #     self.client.client_id = state["client"]["client_id"]
-    #     self.client.client_secret = state["client"]["client_secret"]
+    #     self.entity.provider_info = pcr
+    #     self.entity.client_id = state["client"]["client_id"]
+    #     self.entity.client_secret = state["client"]["client_secret"]
     #
     #     for key, val in list(pcr.items()):
     #         if key.endswith("_endpoint"):
-    #             setattr(self.client, key, val)
+    #             setattr(self.entity, key, val)
     #
     #     try:
-    #         self.client.registration_response = RegistrationResponse().from_json(
+    #         self.entity.registration_response = RegistrationResponse().from_json(
     #             state["client"]["registration_resp"])
     #     except KeyError:
     #         pass

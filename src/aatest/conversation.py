@@ -24,17 +24,17 @@ logger = logging.getLogger(__name__)
 
 
 class Conversation(object):
-    def __init__(self, flow, client, msg_factory, interaction=None,
+    def __init__(self, flow, entity, msg_factory, interaction=None,
                  check_factory=None, features=None, trace_cls=Trace,
                  **extra_args):
         self.flow = flow
-        self.client = client
+        self.entity = entity
         self.msg_factory = msg_factory
         self.trace = trace_cls(True)
         self.test_id = ""
         self.info = {}
         self.index = 0
-        self.interaction = Interaction(self.client, interaction)
+        self.interaction = Interaction(self.entity, interaction)
         self.check_factory = check_factory
         self.features = features
         self.extra_args = extra_args
@@ -66,28 +66,28 @@ class Conversation(object):
             raise e
 
     def my_endpoints(self):
-        return self.client.redirect_uris
+        return self.entity.redirect_uris
 
     def dump_state(self, filename):
         state = {
             "client": {
-                "behaviour": self.client.behaviour,
-                "keyjar": self.client.keyjar.dump(),
-                "provider_info": self.client.provider_info.to_json(),
-                "client_id": self.client.client_id,
-                "client_secret": self.client.client_secret,
+                "behaviour": self.entity.behaviour,
+                "keyjar": self.entity.keyjar.dump(),
+                "provider_info": self.entity.provider_info.to_json(),
+                "client_id": self.entity.client_id,
+                "client_secret": self.entity.client_secret,
             },
             "trace_log": {"start": self.trace.start, "trace": self.trace.trace},
             "sequence": self.flow,
             "flow_index": self.index,
-            "client_config": self.client.conf,
+            "client_config": self.entity.conf,
             "test_output": self.events.get('test_output')
         }
 
         try:
             state["client"][
                 "registration_resp"] = \
-                self.client.registration_response.to_json()
+                self.entity.registration_response.to_json()
         except AttributeError:
             pass
 
@@ -126,7 +126,7 @@ class Conversation(object):
         _op = Action(_spec["control"])
 
         try:
-            _response = _op(self.client, self, self.trace, url,
+            _response = _op(self.entity, self, self.trace, url,
                             response, content, self.features)
             if isinstance(_response, dict):
                 self.events.store('response', _response)
@@ -177,7 +177,7 @@ class Conversation(object):
                     break
                 else:
                     try:
-                        response = self.client.send(
+                        response = self.entity.send(
                             url, "GET",
                             headers={"Referer": self.events.last('position')})
                     except Exception as err:
@@ -223,7 +223,7 @@ class Conversation(object):
 
         if body_type:
             if response:
-                return self.client.parse_response(response, text,
+                return self.entity.parse_response(response, text,
                                                   body_type, state, **kwargs)
             else:
                 raise OtherError("Didn't expect a response body")

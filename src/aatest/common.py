@@ -37,7 +37,7 @@ def make_list(flows, profile, map_prof, **kw_args):
     return res
 
 
-def make_client(**kw_args):
+def make_entity(**kw_args):
     raise NotImplemented()
 
 

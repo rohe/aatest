@@ -56,6 +56,7 @@ class Operation(object):
         self.cache = cache
         # detach
         self.tests = copy.deepcopy(self._tests)
+        self.allowed_status_codes = [200]
 
         # Monkey-patch: make sure we use the same http session (preserving
         # cookies) when fetching keys from issuers 'jwks_uri' as for the
@@ -143,6 +144,9 @@ class Operation(object):
         return res
 
     def handle_response(self, *args):
+        raise NotImplemented
+
+    def handle_request(self, *args):
         raise NotImplemented
 
 

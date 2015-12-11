@@ -34,6 +34,7 @@ def skip_operation(oper, arg):
     if oper.profile[0] in arg["flow_type"]:
         oper.skip = True
 
+
 def expect_exception(oper, args):
     oper.expect_exception = args
 
@@ -57,6 +58,19 @@ def conditional_expect_exception(oper, args):
     except KeyError:
         if res is True:
             oper.expect_exception = exception
+
+
+def add_assertion(oper, args):
+    for key, item in args.items():
+        oper.tests['post'].extend((key, item))
+
+
+def add_pre_tests(oper, args):
+    oper.tests['pre'].update(args)
+
+
+def set_allowed_status_codes(oper, args):
+    oper.allowed_status_codes = args
 
 
 def factory(name):
