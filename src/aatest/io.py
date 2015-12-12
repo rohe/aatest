@@ -64,15 +64,16 @@ class ClIO(IO):
                 output = ["%s: %s" % (k, _pi[k]) for k in ["Issuer", "Profile",
                                                            "Test ID"]]
             else:
-                output = []
+                output = ['Test ID: {}'.format(_conv.test_id)]
 
-            output.append("Timestamp: %s" % in_a_while())
+            output.append("Timestamp: {}".format(in_a_while()))
             output.extend(["", sline, ""])
             output.extend(trace_output(_conv.trace))
             output.extend(["", sline, ""])
             dat = _conv.events.get_data('test_output')
             output.extend(test_output(dat))
             output.extend(["", sline, ""])
+
             # and lastly the result
             info = {
                 "test_output": dat,

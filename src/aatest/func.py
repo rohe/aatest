@@ -60,13 +60,14 @@ def conditional_expect_exception(oper, args):
             oper.expect_exception = exception
 
 
-def add_assertion(oper, args):
+def add_post_assertion(oper, args):
     for key, item in args.items():
-        oper.tests['post'].extend((key, item))
+        oper.tests['post'].append((key, item))
 
 
-def add_pre_tests(oper, args):
-    oper.tests['pre'].update(args)
+def add_pre_assertion(oper, args):
+    for key, item in args.items():
+        oper.tests['pre'].append((key, item))
 
 
 def set_allowed_status_codes(oper, args):

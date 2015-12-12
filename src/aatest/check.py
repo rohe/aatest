@@ -93,7 +93,7 @@ class Check(object):
             if self._status != OK:
                 res.message = self.msg
 
-        for key, val in kwargs:
+        for key, val in kwargs.items():
             setattr(self, key, val)
 
         return res
@@ -181,27 +181,28 @@ class Parse(CriticalError):
 
 class CheckHTTPResponse(CriticalError):
     """
-    Checks that the HTTP response status is within the 200 or 300 range
+    Checks that the HTTP response status is within a specified range
     """
-    cid = "check_http_response"
-    msg = "OP error"
+    cid = "http_response"
+    msg = "Incorrect HTTP status_code"
 
     def _func(self, conv):
-        _response = conv.last_response
-        _content = conv.last_content
+        _response = conv.events.last_item('response')
 
         res = {}
         if not _response:
             return res
 
-        if _response.status_code >= 400:
-            self._status = self.status
-            self._message = self.msg
-            res["content"] = _content
-            res["url"] = conv.position
-            res["http_status"] = _response.status_code
-        elif _response.status_code in [300, 301, 302]:
-            pass
+        if 'status_code' in self._kwargs:
+            if _response.status_code not in self._kwargs['status_code']:
+                self._status = self.status
+                self._message = self.msg
+                res["http_status"] = _response.status_code
+        else:
+            if _response.status_code >= 400:
+                self._status = self.status
+                self._message = self.msg
+                res["http_status"] = _response.status_code
 
         return res
 

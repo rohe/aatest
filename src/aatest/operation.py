@@ -79,17 +79,19 @@ class Operation(object):
             else:
                 _ver = None
 
-            if self._tests["pre"]:
+            if self.tests["pre"]:
                 _ver.test_sequence(self.tests["pre"])
 
             self.conv.trace.info(
                 "Running <{}>".format(self.__class__.__name__))
             res = self.run(*args, **kwargs)
-            if res:
-                return res
 
             if self.tests["post"]:
                 _ver.test_sequence(self.tests["post"])
+
+            if res:
+                return res
+
 
     def _setup(self):
         if self.skip:  # Don't bother

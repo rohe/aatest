@@ -79,15 +79,15 @@ class Verify(object):
             except AttributeError:
                 output = None
 
+            self.conv.trace.info("Assert {}".format(chk.__class__.__name__))
             try:
                 stat = chk(self.conv, output)
             except Exception as err:
                 exception_trace('do_check', err, logger)
                 raise
             else:
-                self.conv.events.store('check', (self.conv.test_id, test, stat))
-                if stat:
-                    self.check_severity(stat)
+                self.conv.events.store('assert', stat)
+                self.check_severity(stat)
 
     def err_check(self, test, err=None, bryt=True):
         if err:
