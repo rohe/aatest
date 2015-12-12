@@ -21,7 +21,7 @@ from setuptools import setup
 __author__ = 'rohe0002'
 
 version = ''
-with open('src/saml2/__init__.py', 'r') as fd:
+with open('src/aatest/__init__.py', 'r') as fd:
     version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
                         fd.read(), re.MULTILINE).group(1)
 
