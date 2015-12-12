@@ -81,6 +81,8 @@ class Operation(object):
 
             if self._tests["pre"]:
                 _ver.test_sequence(self.tests["pre"])
+                self.conv.trace.info(
+                    "Running {}".format(self.__class__.__name__))
             res = self.run(*args, **kwargs)
             if res:
                 return res
