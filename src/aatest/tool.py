@@ -117,17 +117,17 @@ class Tester(object):
                 return self.io.err_response(self.sh.session, "run_sequence",
                                             err)
             else:
-                resp = self.handle_response(resp, index, _oper)
+                resp = self.handle_response(resp, index, oper=_oper)
                 if resp:
                     return self.io.respond(resp)
 
             index += 1
 
         try:
-            if self.conv.flow["tests"]:
+            if self.conv.flow["assertion"]:
                 _ver = Verify(self.chk_factory, self.conv.msg_factory,
                               self.conv)
-                _ver.test_sequence(self.conv.flow["tests"])
+                _ver.test_sequence(self.conv.flow["assertion"])
         except KeyError:
             pass
         except Exception as err:
