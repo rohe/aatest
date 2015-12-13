@@ -13,6 +13,10 @@ __author__ = 'roland'
 logger = logging.getLogger(__name__)
 
 
+class MissingTest(Exception):
+    pass
+
+
 class Verify(object):
     def __init__(self, check_factory, msg_factory, conv):
         self.check_factory = check_factory
@@ -23,53 +27,56 @@ class Verify(object):
         self.conv = conv
 
     def check_severity(self, stat):
-        if isinstance(stat, TestResult):
-            if stat.status >= 4:
-                try:
-                    self.trace.error("WHERE: {}".format(stat.cid))
-                except AttributeError:
-                    pass
-                self.trace.error("STATUS: {}".format(STATUSCODE[stat.status]))
-                try:
-                    self.trace.error("HTTP STATUS: {}".format(stat.http_status))
-                except AttributeError:
-                    pass
-                try:
-                    self.trace.error("INFO: {}".format(stat.message))
-                except KeyError:
-                    pass
-
-                try:
-                    if not stat.mti:
-                        raise Break(stat.message)
-                    else:
-                        raise FatalError(stat.message)
-                except KeyError:
-                    pass
-        elif stat['status'] >= 4:
-            self.trace.error("WHERE: {}".format(stat['cid']))
-            self.trace.error("STATUS: {}".format(STATUSCODE[stat['status']]))
+        #if isinstance(stat, TestResult):
+        if stat.status >= 4:
             try:
-                self.trace.error("HTTP STATUS: {}".format(stat['http_status']))
-            except KeyError:
+                self.trace.error("WHERE: {}".format(stat.cid))
+            except AttributeError:
+                pass
+            self.trace.error("STATUS: {}".format(STATUSCODE[stat.status]))
+            try:
+                self.trace.error("HTTP STATUS: {}".format(stat.http_status))
+            except AttributeError:
                 pass
             try:
-                self.trace.error("INFO: {}".format(stat['message']))
+                self.trace.error("INFO: {}".format(stat.message))
             except KeyError:
                 pass
 
             try:
-                if not stat['mti']:
-                    raise Break(stat['message'])
+                if not stat.mti:
+                    raise Break(stat.message)
                 else:
-                    raise FatalError(stat['message'])
+                    raise FatalError(stat.message)
             except KeyError:
                 pass
+        # elif stat['status'] >= 4:
+        #     self.trace.error("WHERE: {}".format(stat['cid']))
+        #     self.trace.error("STATUS: {}".format(STATUSCODE[stat['status']]))
+        #     try:
+        #         self.trace.error("HTTP STATUS: {}".format(stat['http_status']))
+        #     except KeyError:
+        #         pass
+        #     try:
+        #         self.trace.error("INFO: {}".format(stat['message']))
+        #     except KeyError:
+        #         pass
+        #
+        #     try:
+        #         if not stat['mti']:
+        #             raise Break(stat['message'])
+        #         else:
+        #             raise FatalError(stat['message'])
+        #     except KeyError:
+        #         pass
 
     def do_check(self, test, **kwargs):
         logger.debug("do_check({}, {})".format(test, kwargs))
         if isinstance(test, str):
-            chk = self.check_factory(test)(**kwargs)
+            try:
+                chk = self.check_factory(test)(**kwargs)
+            except TypeError:
+                raise MissingTest(test)
         else:
             chk = test(**kwargs)
 

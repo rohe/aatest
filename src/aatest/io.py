@@ -43,7 +43,8 @@ class ClIO(IO):
     def flow_list(self, session):
         pass
 
-    def represent_result(self, info, session):
+    @staticmethod
+    def represent_result(info, session):
         return represent_result(info, session)
 
     def dump_log(self, session, test_id):
@@ -73,7 +74,6 @@ class ClIO(IO):
             dat = _conv.events.get_data('test_output')
             output.extend(test_output(dat))
             output.extend(["", sline, ""])
-
             # and lastly the result
             info = {
                 "test_output": dat,

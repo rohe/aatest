@@ -44,7 +44,7 @@ class TestResult(object):
         self.cid = ''
 
     def __str__(self):
-        if self.status:
+        if self.status > OK:
             return '{}: status={}, message={}'.format(self.test_id,
                                                       STATUSCODE[self.status],
                                                       self.message)

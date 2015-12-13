@@ -2,7 +2,7 @@ import json
 import os
 import tarfile
 from aatest import END_TAG
-from aatest.check import STATUSCODE
+from aatest.check import STATUSCODE, OK
 from aatest.check import WARNING
 from aatest.check import CRITICAL
 from aatest.check import INCOMPLETE
@@ -21,27 +21,22 @@ def trace_output(trace):
     return element
 
 
-def test_output(out):
+def do_assertions(events, html=False):
     """
 
     """
-    element = ["Test output\n"]
-    for item in out:
-        if isinstance(item, tuple):
-            element.append("__%s:%s__" % item)
-        else:
-            element.append("[%s]" % item["id"])
-            element.append("\tstatus: %s" % STATUSCODE[item["status"]])
-            try:
-                element.append("\tdescription: %s" % (item["name"]))
-            except KeyError:
-                pass
-            try:
-                element.append("\tinfo: %s" % (item["message"]))
-            except KeyError:
-                pass
-    element.append("\n")
-    return element
+    if html:
+        element = ["<h3>Assertions</h3>", "<pre><code>"]
+    else:
+        element = ["Assertions\n"]
+    for assertion in events.get_data('assert'):
+        element.append('{}'.format(assertion))
+    if html:
+        element.append("</code></pre>")
+        return "\n".join(element)
+    else:
+        element.append("\n")
+        return element
 
 
 def end_tags(info):
@@ -56,18 +51,18 @@ def end_tags(info):
     return False
 
 
-def test_summation(test_output, sid):
-    status = 1
-    for item in test_output:
-        if isinstance(item, tuple):
-            continue
-        if item["status"] > status:
-            status = item["status"]
+def test_summation(events, sid):
+    status = OK
+    result = []
+    for test_result in events.get_data('assertion'):
+        result.append('{}'.format(test_result))
+        if test_result.status > status:
+            status = test_result.status
 
     info = {
         "id": sid,
         "status": status,
-        "tests": test_output
+        "assertions": result
     }
 
     return info

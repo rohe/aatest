@@ -83,7 +83,7 @@ class Operation(object):
                 _ver.test_sequence(self.tests["pre"])
 
             self.conv.trace.info(
-                "Running <{}>".format(self.__class__.__name__))
+                "Running '{}'".format(self.__class__.__name__))
             res = self.run(*args, **kwargs)
 
             if self.tests["post"]:
@@ -131,7 +131,8 @@ class Operation(object):
         res = None
         try:
             self.conv.trace.info(
-                "Running {} with kwargs: {}".format(func, kwargs))
+                "Running {} with kwargs: {}".format(func.__name__
+                                                    , kwargs))
             res = func(**kwargs)
         except Exception as err:
             if not self.expect_exception:
@@ -146,6 +147,7 @@ class Operation(object):
                     "Expected exception '{}'.".format(self.expect_exception))
             if res:
                 self.conv.trace.reply(res)
+                self.conv.events.store('response', res)
 
         return res
 
