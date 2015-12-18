@@ -10,7 +10,7 @@ from oic.oic import RegistrationResponse
 from aatest.opfunc import Operation
 from aatest import FatalError
 from aatest import Break
-from aatest.check import ExpectedError
+from aatest.check import ExpectedError, TestResult
 from aatest.check import INTERACTION
 from aatest.events import Events
 from aatest.interaction import Interaction
@@ -89,14 +89,14 @@ class Conversation(object):
             chk = test(**kwargs)
 
         if chk.__class__.__name__ not in self.ignore_check:
-            stat = chk(self, self.events.last('test_output').data)
+            stat = chk(self, self.events.last('condition').data)
             self.check_severity(stat)
 
     def err_check(self, test, err=None, bryt=True):
         if err:
             self.exception = err
         chk = self.check_factory(test)()
-        chk(self, self.events.last('test_output').data)
+        chk(self, self.events.last('condition').data)
         if bryt:
             e = FatalError("%s" % err)
             e.trace = "".join(traceback.format_exception(*sys.exc_info()))
@@ -212,12 +212,10 @@ class Conversation(object):
                                 _response, content, self.features)
                 if isinstance(_response, dict):
                     self.events.store('response', _response)
-                    self.events.store('content', _response)
                     return _response
-                content = _response.text
                 self.events.store('position', url)
-                self.events.store('content', content)
-                self.events.store('response', _response)
+                self.events.store('http response', _response)
+                self.events.store('received', _response.text)
 
                 if _response.status_code >= 400:
                     break
@@ -226,12 +224,11 @@ class Conversation(object):
                 raise
             except Exception as err:
                 self.err_check("exception", err, False)
-                self.events.store('test_output',
-                                  {"status": 3, "id": "Communication error",
-                                   "message": "%s" % err})
+                self.events.store('condition',
+                                  TestResult(test_id="Communication error", status=3, message="{}".format(err)))
                 raise FatalError
 
-        self.events.store('response', _response)
+        self.events.store('http response', _response)
         try:
             self.events.store('content', _response.text)
         except AttributeError:
@@ -329,12 +326,12 @@ class Conversation(object):
             try:
                 self.do_query()
             except InteractionNeeded:
-                self.events.store('test_output',
-                                  {"status": INTERACTION,
-                                   "message": self.last_content,
-                                   "id": "exception",
-                                   "name": "interaction needed",
-                                   "url": self.position})
+                self.events.store('condition',
+                                  TestResult(status=INTERACTION,
+                                   message=self.events.last_item('received'),
+                                   test_id="exception",
+                                   name="interaction needed",
+                                   url=self.position))
                 break
             except FatalError:
                 raise
@@ -369,7 +366,7 @@ class Conversation(object):
             "sequence": self.sequence["flow"],
             "flow_index": self.flow_index,
             "entity_config": self.entity_config,
-            "test_output": self.events.get('test_output')
+            "condition checks": self.events.get('condition')
         }
 
         try:
@@ -390,7 +387,7 @@ class Conversation(object):
     #     self.trace.trace = state["trace_log"]["trace"]
     #     self.flow_index = state["flow_index"]
     #     self.entity_config = state["entity_config"]
-    #     self.test_output = state["test_output"]
+    #     self.condition_checks = state["condition checks"]
     #
     #     self.entity.behaviour = state["client"]["behaviour"]
     #     self.entity.keyjar.restore(state["client"]["keyjar"])

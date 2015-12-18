@@ -13,6 +13,7 @@ import time
 
 from aatest import FatalError
 from aatest import Trace
+from aatest.check import TestResult
 from aatest.events import Events
 from aatest.interaction import Action
 from aatest.interaction import Interaction
@@ -59,7 +60,7 @@ class Conversation(object):
         if err:
             self.exception = err
         chk = self.check_factory(test)()
-        chk(self, self.events.last('test_output'))
+        chk(self, self.events.last('condition'))
         if bryt:
             e = FatalError("%s" % err)
             e.trace = "".join(traceback.format_exception(*sys.exc_info()))
@@ -81,7 +82,7 @@ class Conversation(object):
             "sequence": self.flow,
             "flow_index": self.index,
             "client_config": self.entity.conf,
-            "test_output": self.events.get('test_output')
+            "condition": self.events.get('condition')
         }
 
         try:
@@ -143,9 +144,8 @@ class Conversation(object):
             raise
         except Exception as err:
             self.err_check("exception", err, False)
-            self.events.store('test_output',
-                              {"status": 3, "id": "Communication error",
-                               "message": "%s" % err})
+            self.events.store('condition',
+                              TestResult(status=3, test_id="Communication error", message="{}".format(err)))
             raise FatalError
 
     def intermit(self, response):

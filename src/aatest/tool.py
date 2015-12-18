@@ -135,5 +135,5 @@ class Tester(object):
             raise
 
         if isinstance(_oper, Done):
-            self.conv.events.store('test_output', ("X", END_TAG))
+            self.conv.events.store('condition', END_TAG)
         return True

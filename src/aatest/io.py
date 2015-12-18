@@ -8,7 +8,7 @@ from aatest.check import WARNING
 from aatest.check import INCOMPLETE
 from aatest.summation import represent_result
 from aatest.summation import evaluate
-from aatest.summation import test_output
+from aatest.summation import condition
 from aatest.summation import trace_output
 
 __author__ = 'roland'
@@ -71,12 +71,11 @@ class ClIO(IO):
             output.extend(["", sline, ""])
             output.extend(trace_output(_conv.trace))
             output.extend(["", sline, ""])
-            dat = _conv.events.get_data('test_output')
-            output.extend(test_output(dat))
+            output.extend(condition(_conv.events))
             output.extend(["", sline, ""])
             # and lastly the result
             info = {
-                "test_output": dat,
+                "condition": condition(_conv.events),
                 "trace": _conv.trace
             }
             output.append(
@@ -90,7 +89,7 @@ class ClIO(IO):
     def result(self, session):
         _conv = session["conv"]
         info = {
-            "test_output": _conv.events.get_data('test_output'),
+            "conditions": _conv.events.get_data('condition'),
             "trace": _conv.trace
         }
         _state = evaluate(session, info)

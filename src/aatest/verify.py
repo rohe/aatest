@@ -82,7 +82,7 @@ class Verify(object):
 
         if chk.__class__.__name__ not in self.ignore_check:
             try:
-                output = self.conv.events.last('test_output').data
+                output = self.conv.events.last_item('condition').data
             except AttributeError:
                 output = None
 
@@ -93,14 +93,14 @@ class Verify(object):
                 exception_trace('do_check', err, logger)
                 raise
             else:
-                self.conv.events.store('assert', stat)
+                self.conv.events.store('condition', stat)
                 self.check_severity(stat)
 
     def err_check(self, test, err=None, bryt=True):
         if err:
             self.exception = err
         chk = self.check_factory(test)()
-        chk(self, self.conv.events.last('test_output').data)
+        chk(self, self.conv.events.last_item('condition'))
         if bryt:
             e = FatalError("%s" % err)
             e.trace = "".join(traceback.format_exception(*sys.exc_info()))

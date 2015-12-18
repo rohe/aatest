@@ -21,16 +21,16 @@ def trace_output(trace):
     return element
 
 
-def do_assertions(events, html=False):
+def condition(events, html=False):
     """
 
     """
     if html:
-        element = ["<h3>Assertions</h3>", "<pre><code>"]
+        element = ["<h3>Conditions</h3>", "<pre><code>"]
     else:
-        element = ["Assertions\n"]
-    for assertion in events.get_data('assert'):
-        element.append('{}'.format(assertion))
+        element = ["Conditions\n"]
+    for cond in events.get_data('condition'):
+        element.append('{}'.format(cond))
     if html:
         element.append("</code></pre>")
         return "\n".join(element)
@@ -43,7 +43,7 @@ def end_tags(info):
     _ll = info["trace"].lastline()
 
     try:
-        if _ll.endswith(END_TAG) and info["test_output"][-1] == ("X", END_TAG):
+        if _ll.endswith(END_TAG) and info["condition"][-1] == END_TAG:
             return True
     except IndexError:
         pass
@@ -85,7 +85,7 @@ def represent_result(info, session, evaluate_func=None):
         text = "FAILED"
 
     warnings = []
-    for item in info["test_output"]:
+    for item in info["condition"]:
         if isinstance(item, tuple):
             continue
         elif item["status"] == WARNING:
@@ -109,7 +109,7 @@ def evaluate(session, info):
         if not session["node"].complete:
             if end_tags(info):
                 session["node"].complete = True
-                _sum = test_summation(info["test_output"], session["testid"])
+                _sum = test_summation(info["condition"], session["testid"])
                 _state = _sum["status"]
     except (AttributeError, KeyError):
         pass

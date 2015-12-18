@@ -20,8 +20,6 @@ STATUSCODE = ["INFORMATION", "OK", "WARNING", "ERROR", "CRITICAL",
 CONT_JSON = "application/json"
 CONT_JWT = "application/jwt"
 
-END_TAG = "==== END ===="
-
 
 def get_protocol_response(conv, cls):
     res = []
@@ -31,20 +29,21 @@ def get_protocol_response(conv, cls):
     return res
 
 
-class TestResult(object):
-    name = 'test_result'
+class State(object):
+    name = 'state'
 
-    def __init__(self, test_id, status, name, mti=False):
+    def __init__(self, test_id, status, name='', mti=False, message='', **kwargs):
         self.test_id = test_id
         self.status = status
         self.name = name
         self.mti = mti
-        self.message = ''
+        self.message = message
         self.http_status = 0
         self.cid = ''
+        self.kwargs = kwargs
 
     def __str__(self):
-        if self.status > OK:
+        if self.status != OK:
             return '{}: status={}, message={}'.format(self.test_id,
                                                       STATUSCODE[self.status],
                                                       self.message)
@@ -59,7 +58,7 @@ class Check(object):
     cid = "check"
     msg = "OK"
     mti = True
-    test_result_cls = TestResult
+    state_cls = State
 
     def __init__(self, **kwargs):
         self._status = OK
@@ -84,8 +83,7 @@ class Check(object):
         except AttributeError:
             name = ""
 
-        res = self.test_result_cls(test_id=self.cid, status=self._status,
-                                   name=name, mti=self.mti)
+        res = self.state_cls(test_id=self.cid, status=self._status, name=name, mti=self.mti)
 
         if self._message:
             res.message = self._message
