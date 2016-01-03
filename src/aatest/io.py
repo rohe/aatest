@@ -20,8 +20,9 @@ TEST_RESULTS = {OK: "OK", ERROR: "ERROR", WARNING: "WARNING",
 
 
 class IO(object):
-    def __init__(self, flows, profile,
-                 check_factory, desc, profile_handler, cache=None, **kwargs):
+    def __init__(self, flows, profile, check_factory, desc='',
+                 profile_handler=None,
+                 cache=None, **kwargs):
         self.flows = flows
         self.cache = cache
         self.test_profile = profile
@@ -60,7 +61,7 @@ class ClIO(IO):
             except Exception as err:
                 raise
 
-            sline = 60*"="
+            sline = 60 * "="
             if _pi:
                 output = ["%s: %s" % (k, _pi[k]) for k in ["Issuer", "Profile",
                                                            "Test ID"]]

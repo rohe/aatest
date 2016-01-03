@@ -1,9 +1,11 @@
 import copy
+import inspect
 import json
 import logging
 import functools
 from oic.utils.http_util import Response
 import time
+import sys
 from aatest.verify import Verify
 
 logger = logging.getLogger(__name__)
@@ -199,3 +201,10 @@ class TimeDelay(Operation):
     def __call__(self, *args, **kwargs):
         time.sleep(self.delay)
         return None
+
+
+def factory(name):
+    for fname, obj in inspect.getmembers(sys.modules[__name__]):
+        if inspect.isclass(obj):
+            if name == fname:
+                return obj

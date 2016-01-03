@@ -11,6 +11,7 @@ def set_request_args(oper, args):
 def set_op_args(oper, args):
     oper.op_args.update(args)
 
+
 def cache_response(oper, arg):
     key = oper.conv.test_id
     oper.cache[key] = oper.conv.protocol_response
@@ -60,18 +61,26 @@ def conditional_expect_exception(oper, args):
             oper.expect_exception = exception
 
 
-def add_post_assertion(oper, args):
+def add_post_condition(oper, args):
     for key, item in args.items():
         oper.tests['post'].append((key, item))
 
 
-def add_pre_assertion(oper, args):
+def add_pre_condition(oper, args):
     for key, item in args.items():
         oper.tests['pre'].append((key, item))
 
 
 def set_allowed_status_codes(oper, args):
     oper.allowed_status_codes = args
+
+
+def set_time_delay(oper, args):
+    oper.delay = args
+
+
+def clear_cookies(oper, args):
+    oper.client.cookiejar.clear()
 
 
 def factory(name):

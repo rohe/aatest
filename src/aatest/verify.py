@@ -6,7 +6,6 @@ from aatest import Break, exception_trace
 from aatest import FatalError
 from aatest.check import STATUSCODE
 from aatest.check import ExpectedError
-from aatest.check import TestResult
 
 __author__ = 'roland'
 

@@ -26,14 +26,12 @@ class Node(object):
 
 
 class SessionHandler(object):
-    def __init__(self, session, profile, flows, orddesc,
+    def __init__(self, session, profile, flows, order,
                  **kwargs):
-        self.session = session
-        #self.profiles = profiles
+        self.session = session or {}
         self.profile = profile
         self.test_flows = flows
-        #self.test_class = klass
-        self.orddesc = orddesc
+        self.order = order
         self.extra = kwargs
 
     def session_setup(self, session=None, path="", index=0):
@@ -69,7 +67,7 @@ class SessionHandler(object):
         f_names = list(self.test_flows.keys())
         f_names.sort()
         session["flow_names"] = []
-        for k in self.orddesc:
+        for k in self.order:
             k += '-'
             l = [z for z in f_names if z.startswith(k)]
             session["flow_names"].extend(l)

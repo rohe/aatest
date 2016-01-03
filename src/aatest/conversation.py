@@ -9,11 +9,10 @@ from oic.oauth2 import ErrorResponse
 from oic.oauth2 import HttpError
 from oic.oauth2 import OtherError
 import sys
-import time
 
 from aatest import FatalError
 from aatest import Trace
-from aatest.check import TestResult
+from aatest.check import State
 from aatest.events import Events
 from aatest.interaction import Action
 from aatest.interaction import Interaction
@@ -145,7 +144,8 @@ class Conversation(object):
         except Exception as err:
             self.err_check("exception", err, False)
             self.events.store('condition',
-                              TestResult(status=3, test_id="Communication error", message="{}".format(err)))
+                              State(status=3, test_id="Communication error",
+                                    message="{}".format(err)))
             raise FatalError
 
     def intermit(self, response):
