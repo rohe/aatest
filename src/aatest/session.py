@@ -26,7 +26,7 @@ class Node(object):
 
 
 class SessionHandler(object):
-    def __init__(self, session, profile, flows, order,
+    def __init__(self, session, profile='', flows=None, order=None,
                  **kwargs):
         self.session = session or {}
         self.profile = profile

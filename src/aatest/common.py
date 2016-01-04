@@ -17,7 +17,7 @@ def make_list(flows, profile, map_prof, **kw_args):
     f_names = list(flows.keys())
     f_names.sort()
     flow_names = []
-    for k in kw_args["orddesc"]:
+    for k in kw_args["order"]:
         k += '-'
         l = [z for z in f_names if z.startswith(k)]
         flow_names.extend(l)
