@@ -6,6 +6,7 @@ from aatest import Break, exception_trace
 from aatest import FatalError
 from aatest.check import STATUSCODE
 from aatest.check import ExpectedError
+from aatest.events import NoSuchEvent
 
 __author__ = 'roland'
 
@@ -80,14 +81,9 @@ class Verify(object):
             chk = test(**kwargs)
 
         if chk.__class__.__name__ not in self.ignore_check:
-            try:
-                output = self.conv.events.last_item('condition').data
-            except AttributeError:
-                output = None
-
             self.conv.trace.info("Assert {}".format(chk.__class__.__name__))
             try:
-                stat = chk(self.conv, output)
+                stat = chk(self.conv)
             except Exception as err:
                 exception_trace('do_check', err, logger)
                 raise
@@ -108,11 +104,16 @@ class Verify(object):
     def test_sequence(self, sequence):
         if isinstance(sequence, dict):
             for test, kwargs in list(sequence.items()):
-                self.do_check(test, **kwargs)
+                if not kwargs:
+                    self.do_check(test)
+                else:
+                    self.do_check(test, **kwargs)
         else:
             for test in sequence:
                 if isinstance(test, tuple):
                     test, kwargs = test
+                    if not kwargs:
+                        kwargs = {}
                 else:
                     kwargs = {}
                 self.do_check(test, **kwargs)

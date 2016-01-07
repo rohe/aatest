@@ -85,18 +85,17 @@ def represent_result(info, session, evaluate_func=None):
         text = "FAILED"
 
     warnings = []
-    for item in info["condition"]:
-        if isinstance(item, tuple):
-            continue
-        elif item["status"] == WARNING:
+    for state in info["events"].get_data('condition'):
+        if state.status == WARNING:
             try:
-                warnings.append(item["message"])
+                warnings.append(state.message)
             except KeyError:
                 pass
     if warnings:
         text = "%s\nWarnings:\n%s" % (text, "\n".join(warnings))
 
     return text
+
 
 def pprint_json(json_txt):
     _jso = json.loads(json_txt)
@@ -118,7 +117,7 @@ def evaluate(session, info):
     return _state
 
 
-def mk_tardir(issuer, test_profile):
+def mk_tar_dir(issuer, test_profile):
     wd = os.getcwd()
 
     tardirname = wd
@@ -139,7 +138,7 @@ def mk_tardir(issuer, test_profile):
 
 
 def create_tar_archive(issuer, test_profile):
-    mk_tardir(issuer, test_profile)
+    mk_tar_dir(issuer, test_profile)
 
     wd = os.getcwd()
     _dir = os.path.join(wd, "tar", issuer)

@@ -21,10 +21,10 @@ CONT_JSON = "application/json"
 CONT_JWT = "application/jwt"
 
 
-def get_protocol_response(conv, cls):
+def get_protocol_response(conv, classinfo):
     res = []
-    for instance, msg in conv.events.get('protocol_response'):
-        if isinstance(instance, cls):
+    for instance, msg in conv.events.get_data('protocol_response'):
+        if isinstance(instance, classinfo):
             res.append((instance, msg))
     return res
 

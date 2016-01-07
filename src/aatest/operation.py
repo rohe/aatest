@@ -30,7 +30,7 @@ def request_with_client_http_session(instance, method, url, **kwargs):
     order (compared to the requests library): (method, url) vs (url, method)
     so we can't bind the instance method directly.
     """
-    return instance.conv.client.http_request(url, method)
+    return instance.conv.entity.http_request(url, method)
 
 
 class Operation(object):

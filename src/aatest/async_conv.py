@@ -18,7 +18,6 @@ from aatest.interaction import Action
 from aatest.interaction import InteractionNeeded
 from aatest.status import STATUSCODE
 
-
 __author__ = 'rolandh'
 
 
@@ -183,10 +182,10 @@ class Conversation(object):
 
             try:
                 _spec = self.interaction.pick_interaction(_base, content)
-                #if _spec in self.interact_done:
+                # if _spec in self.interact_done:
                 #    self.trace.error("Same interaction a second time")
                 #    raise InteractionNeeded("Same interaction twice")
-                #self.interact_done.append(_spec)
+                # self.interact_done.append(_spec)
             except InteractionNeeded:
                 if self.extra_args["break"]:
                     self.dump_state(self.extra_args["break"])
@@ -225,7 +224,9 @@ class Conversation(object):
             except Exception as err:
                 self.err_check("exception", err, False)
                 self.events.store('condition',
-                                  TestResult(test_id="Communication error", status=3, message="{}".format(err)))
+                                  TestResult(test_id="Communication error",
+                                             status=3,
+                                             message="{}".format(err)))
                 raise FatalError
 
         self.events.store('http response', _response)
@@ -328,10 +329,11 @@ class Conversation(object):
             except InteractionNeeded:
                 self.events.store('condition',
                                   TestResult(status=INTERACTION,
-                                   message=self.events.last_item('received'),
-                                   test_id="exception",
-                                   name="interaction needed",
-                                   url=self.position))
+                                             message=self.events.last_item(
+                                                 'received'),
+                                             test_id="exception",
+                                             name="interaction needed",
+                                             url=self.position))
                 break
             except FatalError:
                 raise
@@ -340,7 +342,7 @@ class Conversation(object):
                     self.trace.info("Protocol message: %s" % err.message)
                 raise FatalError
             except Exception as err:
-                #self.err_check("exception", err)
+                # self.err_check("exception", err)
                 raise
             else:
                 if self.extra_args["cookie_exp"]:
@@ -371,7 +373,8 @@ class Conversation(object):
 
         try:
             state["client"][
-                "registration_resp"] = self.entity.registration_response.to_json()
+                "registration_resp"] = \
+                self.entity.registration_response.to_json()
         except AttributeError:
             pass
 
