@@ -2,7 +2,7 @@ import json
 import os
 import tarfile
 from aatest import END_TAG
-from aatest.check import STATUSCODE, OK
+from aatest.check import OK
 from aatest.check import WARNING
 from aatest.check import CRITICAL
 from aatest.check import INCOMPLETE
@@ -68,18 +68,13 @@ def test_summation(events, sid):
     return info
 
 
-def represent_result(info, session, evaluate_func=None):
-    if evaluate_func is None:
-        _stat = evaluate(session, info)
-    else:
-        _stat = evaluate_func(session, info)
-
-    if _stat == INCOMPLETE:
+def represent_result(info, state):
+    if state == INCOMPLETE:
         return "PARTIAL RESULT"
 
-    if _stat < WARNING or _stat > CRITICAL:
+    if state < WARNING or state > CRITICAL:
         text = "PASSED"
-    elif _stat == WARNING:
+    elif state == WARNING:
         text = "WARNING"
     else:
         text = "FAILED"
@@ -87,6 +82,7 @@ def represent_result(info, session, evaluate_func=None):
     warnings = []
     for state in info["events"].get_data('condition'):
         if state.status == WARNING:
+            text = 'WARNING'
             try:
                 warnings.append(state.message)
             except KeyError:
