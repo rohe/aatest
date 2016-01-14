@@ -40,13 +40,22 @@ class IO(object):
 SIGN = {OK: "+", WARNING: "?", ERROR: "-", INCOMPLETE: "!"}
 
 
+def eval_state(events):
+    res = OK
+    for state in events.get_data('condition'):
+        if state.status > res:
+            res = state.status
+
+    return res
+
+
 class ClIO(IO):
     def flow_list(self, session):
         pass
 
     @staticmethod
-    def represent_result(info, session):
-        return represent_result(info, session)
+    def represent_result(info, state):
+        return represent_result(info, state)
 
     def dump_log(self, session, test_id):
         try:
@@ -76,11 +85,12 @@ class ClIO(IO):
             output.extend(["", sline, ""])
             # and lastly the result
             info = {
-                "condition": condition(_conv.events),
+                "events": _conv.events,
                 "trace": _conv.trace
             }
             output.append(
-                "RESULT: {}".format(self.represent_result(info, session)))
+                "RESULT: {}".format(self.represent_result(
+                    info, eval_state(_conv.events))))
             output.append("")
 
             txt = "\n".join(output)

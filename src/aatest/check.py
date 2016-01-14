@@ -4,7 +4,6 @@ import sys
 
 __author__ = 'rolandh'
 
-
 INFORMATION = 0
 OK = 1
 WARNING = 2
@@ -32,23 +31,34 @@ def get_protocol_response(conv, classinfo):
 class State(object):
     name = 'state'
 
-    def __init__(self, test_id, status, name='', mti=False, message='', **kwargs):
+    def __init__(self, test_id, status, name='', mti=False, message='',
+                 context='', **kwargs):
         self.test_id = test_id
         self.status = status
         self.name = name
         self.mti = mti
         self.message = message
+        self.context = context
         self.http_status = 0
         self.cid = ''
         self.kwargs = kwargs
 
     def __str__(self):
+        _info = {
+            'ctx': self.context, 'id': self.test_id,
+            'stat': STATUSCODE[self.status], 'msg': self.message
+        }
         if self.status != OK:
-            return '{}: status={}, message={}'.format(self.test_id,
-                                                      STATUSCODE[self.status],
-                                                      self.message)
+            if self.context:
+                return '{ctx}:{id}: status={stat}, message={msg}'.format(
+                    **_info)
+            else:
+                return '{id}: status={stat}, message={msg}'.format(**_info)
         else:
-            return '{}: status={}'.format(self.test_id, STATUSCODE[self.status])
+            if self.context:
+                return '{ctx}:{id}: status={stat}'.format(**_info)
+            else:
+                return '{id}: status={stat}'.format(**_info)
 
 
 class Check(object):
@@ -83,7 +93,8 @@ class Check(object):
         except AttributeError:
             name = ""
 
-        res = self.state_cls(test_id=self.cid, status=self._status, name=name, mti=self.mti)
+        res = self.state_cls(test_id=self.cid, status=self._status, name=name,
+                             mti=self.mti)
 
         if self._message:
             res.message = self._message

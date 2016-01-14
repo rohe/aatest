@@ -18,13 +18,14 @@ class MissingTest(Exception):
 
 
 class Verify(object):
-    def __init__(self, check_factory, msg_factory, conv):
+    def __init__(self, check_factory, msg_factory, conv, cls_name=''):
         self.check_factory = check_factory
         self.msg_factory = msg_factory
         self.trace = conv.trace
         self.ignore_check = []
         self.exception = None
         self.conv = conv
+        self.cls_name = cls_name
 
     def check_severity(self, stat):
         #if isinstance(stat, TestResult):
@@ -88,6 +89,8 @@ class Verify(object):
                 exception_trace('do_check', err, logger)
                 raise
             else:
+                if self.cls_name:
+                    stat.context = self.cls_name
                 self.conv.events.store('condition', stat)
                 self.check_severity(stat)
 

@@ -379,6 +379,6 @@ class Operation(object):
         self.trace.reply("FUNCTION: %s" % self.function.__name__)
         self.trace.reply("ARGS: %s" % (_args,))
 
-        result = self.function(self.conv.client, **_args)
+        result = self.function(self.conv.entity, **_args)
         self.post_op(result, self.conv, _args)
         return result

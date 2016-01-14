@@ -75,17 +75,17 @@ class Operation(object):
         if self.skip:
             return
         else:
+            cls_name = self.__class__.__name__
             if self.tests["pre"] or self.tests["post"]:
                 _ver = Verify(self.check_factory, self.conv.msg_factory,
-                              self.conv)
+                              self.conv, cls_name=cls_name)
             else:
                 _ver = None
 
             if self.tests["pre"]:
                 _ver.test_sequence(self.tests["pre"])
 
-            self.conv.trace.info(
-                "Running '{}'".format(self.__class__.__name__))
+            self.conv.trace.info("Running '{}'".format(cls_name))
             res = self.run(*args, **kwargs)
 
             if self.tests["post"]:
@@ -139,7 +139,7 @@ class Operation(object):
         except Exception as err:
             if not self.expect_exception:
                 raise
-            elif not isinstance(err, self.expect_exception):
+            elif not err.__class__.__name__ == self.expect_exception:
                 raise
             else:
                 self.conv.trace.info("Got expected exception: {}".format(err))

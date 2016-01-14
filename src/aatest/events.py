@@ -40,7 +40,7 @@ class Events(object):
         return [d.data for d in self.get(typ)]
 
     def get_messages(self, typ, msg_cls):
-        return [m.data for m in self.get(typ) if isinstance(m, msg_cls)]
+        return [m.data for m in self.get(typ) if isinstance(m.data, msg_cls)]
 
     def last(self, typ):
         res = self.get(typ)
@@ -83,3 +83,6 @@ class Events(object):
     def extend(self, events):
         for event in events:
             self.append(event)
+
+    def __iter__(self):
+        return self.events.__iter__()
