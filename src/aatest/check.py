@@ -16,6 +16,8 @@ INCOMPLETE = 4
 STATUSCODE = ["INFORMATION", "OK", "WARNING", "ERROR", "CRITICAL",
               "INTERACTION"]
 
+STATUSCODE_TRANSL = dict([(STATUSCODE[i], i) for i in range(len(STATUSCODE))])
+
 CONT_JSON = "application/json"
 CONT_JWT = "application/jwt"
 
