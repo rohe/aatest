@@ -116,12 +116,15 @@ def evaluate(session, info):
 def mk_tar_dir(issuer, test_profile):
     wd = os.getcwd()
 
+    # Make sure there is a tar directory
     tardirname = wd
     for part in ["tar", issuer, test_profile]:
         tardirname = os.path.join(tardirname, part)
         if not os.path.isdir(tardirname):
             os.mkdir(tardirname)
 
+    # Now walk through the log directory and make symlinks from
+    # the log files to links in the tar directory
     logdirname = os.path.join(wd, "log", issuer, test_profile)
     for item in os.listdir(logdirname):
         if item.startswith("."):
@@ -129,7 +132,11 @@ def mk_tar_dir(issuer, test_profile):
 
         ln = os.path.join(logdirname, item)
         tn = os.path.join(tardirname, "{}.txt".format(item))
-        if not os.path.isfile(tn):
+
+        if os.path.isfile(tn):
+            os.unlink(tn)
+
+        if not os.path.islink(tn):
             os.symlink(ln, tn)
 
 
