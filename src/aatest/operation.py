@@ -3,9 +3,11 @@ import inspect
 import json
 import logging
 import functools
-from oic.utils.http_util import Response
 import time
 import sys
+
+from oic.utils.http_util import Response
+
 from aatest.verify import Verify
 
 logger = logging.getLogger(__name__)

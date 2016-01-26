@@ -14,9 +14,6 @@ from aatest import FatalError
 from aatest import Trace
 from aatest.check import State
 from aatest.events import Events
-from aatest.interaction import Action
-from aatest.interaction import Interaction
-from aatest.interaction import InteractionNeeded
 
 __author__ = 'roland'
 
@@ -34,7 +31,7 @@ class Conversation(object):
         self.test_id = ""
         self.info = {}
         self.index = 0
-        self.interaction = Interaction(self.entity, interaction)
+        self.comhandler = None
         self.check_factory = check_factory
         self.features = features
         self.extra_args = extra_args

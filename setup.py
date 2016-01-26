@@ -16,7 +16,7 @@
 #
 import re
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 __author__ = 'rohe0002'
 
@@ -33,8 +33,8 @@ setup(
     author="Roland Hedberg",
     author_email="roland.hedberg@adm.umu.se",
     license="Apache 2.0",
-    packages=["aatest"],
-    package_dir={"": "src"},
+    packages=find_packages('src'),
+    package_dir={"aatest": "src/aatest"},
     classifiers=[
         "Development Status :: 4 - Beta",
         "License :: OSI Approved :: Apache Software License",

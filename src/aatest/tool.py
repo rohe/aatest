@@ -1,4 +1,5 @@
 import logging
+from aatest.check import State, OK
 
 from aatest import exception_trace
 from aatest import END_TAG
@@ -25,7 +26,7 @@ class ConfigurationError(Exception):
 class Tester(object):
     def __init__(self, io, sh, profile, flows, check_factory,
                  msg_factory, cache, make_entity, map_prof,
-                 trace_cls, **kwargs):
+                 trace_cls, com_handler, **kwargs):
         self.io = io
         self.sh = sh
         self.conv = None
@@ -38,6 +39,7 @@ class Tester(object):
         self.make_entity = make_entity
         self.map_prof = map_prof
         self.trace_cls = trace_cls
+        self.com_handler = com_handler
         self.cjar = {}
 
     def match_profile(self, test_id):
@@ -57,6 +59,7 @@ class Tester(object):
         self.conv = Conversation(_flow, _cli, redirs, kw_args["msg_factory"],
                                  trace_cls=self.trace_cls)
         _cli.conv = self.conv
+        self.com_handler.conv = self.conv
         self.conv.sequence = self.sh.session["sequence"]
         self.sh.session["conv"] = self.conv
         return True
@@ -117,9 +120,11 @@ class Tester(object):
                 return self.io.err_response(self.sh.session, "run_sequence",
                                             err)
             else:
-                resp = self.handle_response(resp, index, oper=_oper)
+                resp = self.com_handler(resp)
                 if resp:
-                    return self.io.respond(resp)
+                    resp = _oper.handle_response(resp.response)
+                    if resp:
+                        return self.io.respond(resp)
 
             index += 1
 
@@ -135,5 +140,5 @@ class Tester(object):
             raise
 
         if isinstance(_oper, Done):
-            self.conv.events.store('condition', END_TAG)
+            self.conv.events.store('condition', State('done', OK))
         return True

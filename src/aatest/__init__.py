@@ -40,11 +40,15 @@ class NotSupported(AATestError):
     pass
 
 
-class RequirementsNotMet(Exception):
+class RequirementsNotMet(AATestError):
     pass
 
 
-class CheckError(Exception):
+class CheckError(AATestError):
+    pass
+
+
+class OperationError(AATestError):
     pass
 
 

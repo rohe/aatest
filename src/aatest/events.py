@@ -86,3 +86,10 @@ class Events(object):
 
     def __iter__(self):
         return self.events.__iter__()
+
+    def last_of(self, types):
+        for ev in self.events.reverse():
+            if ev.typ in types:
+                return ev.data
+
+        return None

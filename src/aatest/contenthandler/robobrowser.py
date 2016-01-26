@@ -1,9 +1,19 @@
+import importlib
+import logging
 import json
 import re
 
 from urllib.parse import urlparse
 from robobrowser import RoboBrowser
 
+from aatest import contenthandler
+from aatest import OperationError
+from aatest import FatalError
+from aatest.contenthandler import HandlerResponse
+
+__author__ = 'roland'
+
+logger = logging.getLogger(__name__)
 
 NO_CTRL = "No submit control with the name='%s' and value='%s' could be found"
 
@@ -29,9 +39,10 @@ def no_func():
 
 class RResponse():
     """
-    A Response class that behaves in the way that mechanize expects it.
-    Links to a requests.Response
+    A HandlerResponse class that behaves in the way that mechanize expects it.
+    Links to a requests.HandlerResponse
     """
+
     def __init__(self, resp):
         self._resp = resp
         self.index = 0
@@ -90,11 +101,17 @@ class RResponse():
 class Interaction(object):
     def __init__(self, httpc, interactions=None, verify_ssl=True):
         self.httpc = httpc
-        self.browser = RoboBrowser()
+        self.browser = RoboBrowser(parser='html.parser')
         self.interactions = interactions
         self.verify_ssl = verify_ssl
 
     def pick_interaction(self, response, base):
+        """
+
+        :param response:
+        :param base:
+        :return:
+        """
         if self.interactions is None:
             return None
 
@@ -216,7 +233,7 @@ class Interaction(object):
                     # else:
                     #     raise
 
-        if form.action in kwargs["tester"].my_endpoints():
+        if form.action in kwargs["tester"].auto_close_urls:
             _res = {}
             for name, cnt in form.fields.items():
                 _res[name] = cnt.value
@@ -230,7 +247,7 @@ class Interaction(object):
         self.browser.submit_form(form, **requests_args)
         return self.browser.state.response
 
-    #noinspection PyUnusedLocal
+    # noinspection PyUnusedLocal
     def chose(self, orig_response, path, **kwargs):
         """
         Sends a HTTP GET to a url given by the present url and the given
@@ -259,7 +276,7 @@ class Interaction(object):
             url = path
 
         return self.httpc.send(url, "GET", trace=_trace)
-        #return resp, ""
+        # return resp, ""
 
     def redirect(self, orig_response, url_regex, **kwargs):
         """
@@ -296,7 +313,7 @@ class Interaction(object):
     def response(self, response, **kwargs):
         return {"text": response.text}
 
-    #noinspection PyUnusedLocal
+    # noinspection PyUnusedLocal
     def interaction(self, args):
         _type = args["type"]
         if _type == "form":
@@ -304,13 +321,14 @@ class Interaction(object):
         elif _type == "link":
             return self.chose
         elif _type == "response":
-           return self.response
+            return self.response
         elif _type == "redirect":
             return self.redirect
         elif _type == "javascript_redirect":
             return self.redirect
         else:
             return no_func
+
 
 # ========================================================================
 
@@ -323,14 +341,13 @@ class Action(object):
     def update(self, dic):
         self.args.update(dic)
 
-    #noinspection PyUnusedLocal
+    # noinspection PyUnusedLocal
     def post_op(self, result, conv, args):
         pass
 
     def __call__(self, tester, location, response, features, **kwargs):
         _conv = tester.conv
-        intact = _conv.interaction
-        function = intact.interaction(self.args)
+        function = tester.handler.interaction(self.args)
 
         try:
             _args = self.args.copy()
@@ -350,3 +367,83 @@ class Action(object):
         result = function(response, **_args)
         self.post_op(result, _conv, _args)
         return result
+
+
+class ContentHandler(contenthandler.ContentHandler):
+    def __init__(self, interactions, conv=None):
+        contenthandler.ContentHandler.__init__(self)
+        self.interactions = interactions
+        self.conv = conv
+        self.cjar = {}
+        self.features = {}
+        self.handler = None
+        self.auto_close_urls = []
+
+    def intermit(self, response, verify_ssl):
+        url = response.url
+        content = response.text
+        _base = url.split("?")[0]
+
+        try:
+            _spec = self.handler.pick_interaction(response, _base)
+        except (InteractionNeeded, KeyError):
+            return HandlerResponse(False)
+
+        if len(_spec) > 2:
+            logger.info(">> %s <<" % _spec["page-type"])
+            if _spec["page-type"] == "login":
+                self.login_page = content
+
+        _op = Action(_spec["control"])
+        if verify_ssl is False:
+            op_args = {"verify": False}
+        else:
+            op_args = {}
+
+        try:
+            response = _op(self, url, response, self.features, **op_args)
+            if isinstance(response, dict):
+                self.conv.events.store('response', response)
+                return HandlerResponse(True, 'OK', response=response)
+            else:
+                self.conv.events.store('http response', response)
+
+            if response.status_code >= 400:
+                return HandlerResponse(True, http_response=response)
+        except (FatalError, InteractionNeeded, OperationError):
+            raise
+        except Exception as err:
+            self.conv.trace.error(err)
+        else:
+            return HandlerResponse(True, 'OK', http_response=response)
+
+    def handle_response(self, http_response, auto_close_urls, target_url,
+                        conv=None, verify_ssl=True, cookie_jar=None):
+        """
+
+        :param http_response: The HTTP response to handle
+        :param auto_close_urls: A list of URLs that if encountered should
+        lead to an immediate break in processing.
+        :param target_url: ???
+        :param conv: A aatest.Conversation instance
+        :param verify_ssl: (True/False) whether the ssl certificates must
+        be verified. Default is True
+        :param cookie_jar: A http.cookiejar.CookieJar instance
+        :return: A aatest.contenthandler.HandlerResponse instance
+        """
+        if http_response is None:
+            return
+
+        if self.interactions:
+            self.conv = conv
+            self.handler = Interaction(conv.entity, self.interactions)
+            self.auto_close_urls = auto_close_urls
+
+            return self.intermit(http_response, verify_ssl)
+
+        return HandlerResponse(False)
+
+
+def factory(**kwargs):
+    spec = importlib.import_module(kwargs['interactions']).INTERACTION
+    return ContentHandler(interactions=spec)
