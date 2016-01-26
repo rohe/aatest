@@ -28,10 +28,14 @@ class Events(object):
         return index
 
     def by_index(self, index):
-        return [e for e in self.events if e.timestamp == index]
+        l = [e for e in self.events if e.timestamp == index]
+        if l:
+            return l[0]
+        else:
+            raise KeyError(index)
 
     def by_ref(self, ref):
-        l = [e for e in self.events if e.ref == ref]
+        return [e for e in self.events if e.ref == ref]
 
     def get(self, typ):
         return [ev for ev in self.events if ev.typ == typ]
@@ -66,10 +70,6 @@ class Events(object):
     def __len__(self):
         return len(self.events)
 
-    def __iter__(self):
-        for ev in self.events:
-            yield ev
-
     def __getitem__(self, item):
         return self.get_data(item)
 
@@ -88,7 +88,9 @@ class Events(object):
         return self.events.__iter__()
 
     def last_of(self, types):
-        for ev in self.events.reverse():
+        l = self.events[:]
+        l.reverse()
+        for ev in l:
             if ev.typ in types:
                 return ev.data
 

@@ -21,9 +21,8 @@ logger = logging.getLogger(__name__)
 
 
 class Conversation(object):
-    def __init__(self, flow, entity, msg_factory, interaction=None,
-                 check_factory=None, features=None, trace_cls=Trace,
-                 **extra_args):
+    def __init__(self, flow, entity, msg_factory, check_factory=None,
+                 features=None, trace_cls=Trace, **extra_args):
         self.flow = flow
         self.entity = entity
         self.msg_factory = msg_factory
