@@ -24,5 +24,17 @@ class ContentHandler(object):
     def __init__(self):
         pass
 
-    def handle_response(self, **kwargs):
+    def handle_response(self, http_response, auto_close_urls,
+                        conv=None, verify_ssl=True, cookie_jar=None):
+        """
+
+        :param http_response: The HTTP response to handle
+        :param auto_close_urls: A list of URLs that if encountered should
+        lead to an immediate break in processing.
+        :param conv: A aatest.Conversation instance
+        :param verify_ssl: (True/False) whether the ssl certificates must
+        be verified. Default is True
+        :param cookie_jar: A http.cookiejar.CookieJar instance
+        :return: A aatest.contenthandler.HandlerResponse instance
+        """
         raise NotImplemented()
