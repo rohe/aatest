@@ -2,17 +2,35 @@ import time
 
 __author__ = 'roland'
 
+# standard event labels
+EV_CONDITION = 'condition'
+EV_FAULT = 'fault'
+EV_HTTP_ARGS = 'http args'
+EV_HTTP_RESPONSE = 'http response'
+EV_OPERATION = 'operation'
+EV_PROTOCOL_RESPONSE = 'protocol response'
+EV_PROTOCOL_REQUEST = 'protocol request'
+EV_REDIRECT_URL = 'redirect url'
+EV_REPLY = 'reply'
+EV_REQUEST = 'request'
+EV_REQUEST_ARGS = 'request args'
+EV_RESPONSE = 'response'
+EV_RESPONSE_ARGS = 'response args'
+EV_SEND = 'send'
+EV_URL = 'url'
+
 
 class NoSuchEvent(Exception):
     pass
 
 
 class Event(object):
-    def __init__(self, timestamp=0, typ='', data=None, ref=''):
+    def __init__(self, timestamp=0, typ='', data=None, ref='', sub=''):
         self.timestamp = timestamp
         self.typ = typ
         self.data = data
         self.ref = ref
+        self.sub = sub
 
     def __str__(self):
         return '{}:{}:{}'.format(self.timestamp, self.typ, self.data)

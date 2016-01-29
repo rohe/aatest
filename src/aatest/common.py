@@ -1,4 +1,5 @@
 import logging
+from aatest.check import assert_summation
 from aatest.verify import Verify
 
 
@@ -45,25 +46,6 @@ def node_dict(flows, lst):
     return dict([(l, flows[l]) for l in lst])
 
 
-def test_summation(conv, sid):
-    status = 0
-    for item in conv.events.get('condition'):
-        _item = item.data
-        if _item["status"] > status:
-            status = _item["status"]
-
-    if status == 0:
-        status = 1
-
-    info = {
-        "id": sid,
-        "status": status,
-        "condition": conv.events.get_data('condition')
-    }
-
-    return info
-
-
 def run_flow(profiles, conv, test_id, conf, profile, chk_factory, index=0):
     print(("==" + test_id))
     conv.test_id = test_id
@@ -99,6 +81,6 @@ def run_flow(profiles, conv, test_id, conf, profile, chk_factory, index=0):
     except Exception as err:
         raise
 
-    info = test_summation(conv, test_id)
+    info = assert_summation(conv, test_id)
 
     return info

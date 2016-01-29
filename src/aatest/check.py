@@ -1,6 +1,9 @@
 import inspect
 import traceback
 import sys
+from aatest.events import EV_CONDITION
+from aatest.events import EV_RESPONSE
+from aatest.events import EV_HTTP_RESPONSE
 
 __author__ = 'rolandh'
 
@@ -22,14 +25,6 @@ CONT_JSON = "application/json"
 CONT_JWT = "application/jwt"
 
 
-def get_protocol_response(conv, classinfo):
-    res = []
-    for instance, msg in conv.events.get_data('protocol_response'):
-        if isinstance(instance, classinfo):
-            res.append((instance, msg))
-    return res
-
-
 class State(object):
     name = 'state'
 
@@ -41,8 +36,6 @@ class State(object):
         self.mti = mti
         self.message = message
         self.context = context
-        self.http_status = 0
-        self.cid = ''
         self.kwargs = kwargs
 
     def __str__(self):
@@ -52,15 +45,37 @@ class State(object):
         }
         if self.status != OK:
             if self.context:
-                return '{ctx}:{id}: status={stat}, message={msg}'.format(
+                txt = '{ctx}:{id}: status={stat}, message={msg}'.format(
                     **_info)
             else:
-                return '{id}: status={stat}, message={msg}'.format(**_info)
+                txt = '{id}: status={stat}, message={msg}'.format(**_info)
         else:
             if self.context:
-                return '{ctx}:{id}: status={stat}'.format(**_info)
+                txt = '{ctx}:{id}: status={stat}'.format(**_info)
             else:
-                return '{id}: status={stat}'.format(**_info)
+                txt = '{id}: status={stat}'.format(**_info)
+
+        if self.name:
+            txt = '{} [{}]'.format(txt, self.name)
+
+        return txt
+
+
+def assert_summation(events, sid):
+    status = OK
+    result = []
+    for test_result in events.get_data(EV_CONDITION):
+        result.append('{}'.format(test_result))
+        if test_result.status > status:
+            status = test_result.status
+
+    info = {
+        "id": sid,
+        "status": status,
+        "assertions": result
+    }
+
+    return info
 
 
 class Check(object):
@@ -135,7 +150,7 @@ class ResponseInfo(Information):
 
     def _func(self, conv=None):
         self._status = self.status
-        _msg = conv.last_content
+        _msg = conv.events.last_item(EV_RESPONSE)
 
         if isinstance(_msg, str):
             self._message = _msg
@@ -163,33 +178,6 @@ class Other(CriticalError):
     msg = "Other error"
 
 
-class Parse(CriticalError):
-    """ Parsing the response """
-    cid = "response-parse"
-    errmsg = "Parse error"
-
-    def _func(self, conv=None):
-        if conv.exception:
-            self._status = self.status
-            err = conv.exception
-            self._message = "%s: %s" % (err.__class__.__name__, err)
-        else:
-            _rmsg = conv.response_message
-            cname = _rmsg.type()
-            if conv.cresp.response != cname:
-                self._status = self.status
-                self._message = (
-                    "Didn't get a response of the type expected:",
-                    " '%s' instead of '%s', content:'%s'" % (
-                        cname, conv.response_type, _rmsg))
-                return {
-                    "response_type": conv.response_type,
-                    "url": conv.position
-                }
-
-        return {}
-
-
 class CheckHTTPResponse(CriticalError):
     """
     Checks that the HTTP response status is within a specified range
@@ -198,7 +186,7 @@ class CheckHTTPResponse(CriticalError):
     msg = "Incorrect HTTP status_code"
 
     def _func(self, conv):
-        _response = conv.events.last_item('response')
+        _response = conv.events.last_item(EV_HTTP_RESPONSE)
 
         res = {}
         if not _response:

@@ -1,6 +1,7 @@
 import json
 import traceback
 import logging
+from aatest.interaction import Interaction
 
 from oic.oauth2 import SUCCESSFUL
 from oic.oauth2 import verify_header
@@ -22,7 +23,8 @@ logger = logging.getLogger(__name__)
 
 class Conversation(object):
     def __init__(self, flow, entity, msg_factory, check_factory=None,
-                 features=None, trace_cls=Trace, **extra_args):
+                 features=None, trace_cls=Trace, interaction=None,
+                 **extra_args):
         self.flow = flow
         self.entity = entity
         self.msg_factory = msg_factory
@@ -44,6 +46,7 @@ class Conversation(object):
             pass
 
         self.trace.info('Conversation initiated')
+        self.interaction = Interaction(self.entity, interaction)
 
     def for_me(self, url):
         for cb in self.callback_uris:

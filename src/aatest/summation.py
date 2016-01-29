@@ -2,10 +2,10 @@ import json
 import os
 import tarfile
 from aatest import END_TAG
-from aatest.check import OK
 from aatest.check import WARNING
 from aatest.check import CRITICAL
 from aatest.check import INCOMPLETE
+from aatest.check import assert_summation
 
 __author__ = 'roland'
 
@@ -51,23 +51,6 @@ def end_tags(info):
     return False
 
 
-def test_summation(events, sid):
-    status = OK
-    result = []
-    for test_result in events.get_data('assertion'):
-        result.append('{}'.format(test_result))
-        if test_result.status > status:
-            status = test_result.status
-
-    info = {
-        "id": sid,
-        "status": status,
-        "assertions": result
-    }
-
-    return info
-
-
 def represent_result(info, state):
     if state == INCOMPLETE:
         return "PARTIAL RESULT"
@@ -104,7 +87,7 @@ def evaluate(session, info):
         if not session["node"].complete:
             if end_tags(info):
                 session["node"].complete = True
-                _sum = test_summation(info["condition"], session["testid"])
+                _sum = assert_summation(info["condition"], session["testid"])
                 _state = _sum["status"]
     except (AttributeError, KeyError):
         pass
