@@ -12,23 +12,25 @@ def set_op_args(oper, args):
     oper.op_args.update(args)
 
 
-def cache_response(oper, arg):
+def cache_events(oper, arg):
     key = oper.conv.test_id
-    oper.cache[key] = oper.conv.protocol_response
+    oper.conv.cache[key] = oper.conv.events.events[:]
 
 
-def restore_response(oper, arg):
+def restore_events(oper, arg):
+    _events = oper.conv.events
+    _cache = oper.conv.cache
     key = oper.conv.test_id
-    if oper.conv.protocol_response:
-        _lst = oper.cache[key][:]
-        for x in oper.conv.protocol_response:
-            if x not in _lst:
-                _lst.append(x)
-        oper.conv.protocol_response = _lst
+
+    if len(_events):
+        for x in _cache[key][:]:
+            if x not in _events:
+                _events.append(x)
+        _events.sort()
     else:
-        oper.conv.protocol_response = oper.cache[key]
+        oper.conv.events = _cache[key]
 
-    del oper.cache[key]
+    del _cache[key]
 
 
 def skip_operation(oper, arg):

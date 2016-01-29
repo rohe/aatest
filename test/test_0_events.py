@@ -57,7 +57,7 @@ class TestEvents():
     def test_get_messages(self):
         self.events.store('response', HandlerResponse(True))
         self.events.store('response', Action(None))
-        self.events.store('response', HandlerResponse(True, user_action='OK'))
+        self.events.store('response', HandlerResponse(True))
 
         mesg = self.events.get_messages('response', HandlerResponse)
         assert len(mesg) == 2
@@ -65,23 +65,21 @@ class TestEvents():
     def test_last(self):
         self.events.store('response', HandlerResponse(True))
         self.events.store('response', Action(None))
-        self.events.store('response', HandlerResponse(True, user_action='OK'))
+        self.events.store('response', HandlerResponse(True))
 
         ev = self.events.last('response')
         assert isinstance(ev, Event)
         assert isinstance(ev.data, HandlerResponse)
         assert ev.data.content_processed == True
-        assert ev.data.user_action == 'OK'
 
     def test_get_message(self):
         self.events.store('response', HandlerResponse(True))
-        self.events.store('response', HandlerResponse(True, user_action='OK'))
+        self.events.store('response', HandlerResponse(True))
         self.events.store('response', Action(None))
 
         hr = self.events.get_message('response', HandlerResponse)
         assert isinstance(hr, HandlerResponse)
         assert hr.content_processed == True
-        assert hr.user_action == 'OK'
 
     def test_last_item(self):
         self.events.store('index', 0)
@@ -140,7 +138,7 @@ class TestEvents():
 
     def test_last_of(self):
         self.events.store('response', HandlerResponse(True))
-        self.events.store('response', HandlerResponse(True, user_action='OK'))
+        self.events.store('response', HandlerResponse(True))
         self.events.store('response', Action(None))
         self.events.store('index', 0)
         self.events.store('index', 1)
@@ -151,3 +149,41 @@ class TestEvents():
 
         data = self.events.last_of(['response', 'song'])
         assert data == 'doremi'
+
+    def test_contains(self):
+        self.events.store('response', HandlerResponse(True))
+        self.events.store('response', HandlerResponse(True))
+        self.events.store('response', Action(None))
+        self.events.store('index', 0)
+        self.events.store('index', 1)
+        self.events.store('song', 'doremi')
+
+        ev = self.events.events[0]
+
+        assert ev in self.events
+
+        ev = Event(typ='foo', data='bar')
+
+        assert ev not in self.events
+
+    def test_sort(self):
+        self.events.store('response', HandlerResponse(True))
+        self.events.store('response', HandlerResponse(True))
+        self.events.store('response', Action(None))
+        self.events.store('index', 0)
+        self.events.store('index', 1)
+        self.events.store('song', 'doremi')
+
+        ev = Event(100, typ='foo', data='bar')
+
+        self.events.append(ev)
+
+        # should be last
+
+        assert ev == self.events.events[len(self.events)-1]
+
+        self.events.sort()
+
+        # should now be first
+
+        assert ev == self.events.events[0]

@@ -28,3 +28,4 @@ class Conversation(object):
         self.exception = None
         self.sequence = []
         self.trace.info('Conversation initiated')
+        self.cache = {}

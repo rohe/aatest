@@ -5,6 +5,7 @@ __author__ = 'roland'
 # standard event labels
 EV_CONDITION = 'condition'
 EV_FAULT = 'fault'
+EV_HANDLER_RESPONSE = 'handler response'
 EV_HTTP_ARGS = 'http args'
 EV_HTTP_RESPONSE = 'http response'
 EV_OPERATION = 'operation'
@@ -26,7 +27,7 @@ class NoSuchEvent(Exception):
 
 class Event(object):
     def __init__(self, timestamp=0, typ='', data=None, ref='', sub=''):
-        self.timestamp = timestamp
+        self.timestamp = timestamp or time.time()
         self.typ = typ
         self.data = data
         self.ref = ref
@@ -34,6 +35,18 @@ class Event(object):
 
     def __str__(self):
         return '{}:{}:{}'.format(self.timestamp, self.typ, self.data)
+
+    def __eq__(self, other):
+        if isinstance(other, Event):
+            for param in ['timestamp', 'typ', 'data', 'ref', 'sub']:
+                if getattr(self, param) != getattr(other, param):
+                    return False
+        return True
+
+    def older(self, other):
+        if other.timestamp >= self.timestamp:
+            return True
+        return False
 
 
 class Events(object):
@@ -113,3 +126,15 @@ class Events(object):
                 return ev.data
 
         return None
+
+    def __contains__(self, event):
+        ts = event.timestamp
+        for ev in self.events:
+            if event.timestamp == ev.timestamp:
+                if event == ev:
+                    return True
+
+        return False
+
+    def sort(self):
+        self.events.sort(key=lambda event: event.timestamp)

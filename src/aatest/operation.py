@@ -2,7 +2,6 @@ import copy
 import inspect
 import json
 import logging
-import functools
 import time
 import sys
 
@@ -38,37 +37,25 @@ def request_with_client_http_session(instance, method, url, **kwargs):
 class Operation(object):
     _tests = {"pre": [], "post": []}
 
-    def __init__(self, conv, io, sh, profile='', test_id='', conf=None,
-                 funcs=None, check_factory=None, cache=None):
+    def __init__(self, conv, io, sh, test_id='', conf=None, funcs=None,
+                 check_factory=None, cache=None):
         self.conv = conv
         self.io = io
         self.sh = sh
         self.funcs = funcs or {}
         self.test_id = test_id
         self.conf = conf
-        try:
-            self.profile = profile.split('.')
-        except AttributeError:
-            self.profile = profile
+        self.check_factory = check_factory
+        self.cache = cache
         self.req_args = {}
         self.op_args = {}
         self.expect_exception = None
         self.expect_error = None
         self.sequence = []
         self.skip = False
-        self.check_factory = check_factory
-        self.cache = cache
+        self.allowed_status_codes = [200]
         # detach
         self.tests = copy.deepcopy(self._tests)
-        self.allowed_status_codes = [200]
-
-        # Monkey-patch: make sure we use the same http session (preserving
-        # cookies) when fetching keys from issuers 'jwks_uri' as for the
-        # rest of the test sequence
-        import oic.utils.keyio
-
-        oic.utils.keyio.request = functools.partial(
-            request_with_client_http_session, self)
 
     def run(self, *args, **kwargs):
         pass
