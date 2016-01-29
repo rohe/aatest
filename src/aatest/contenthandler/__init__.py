@@ -10,9 +10,7 @@ class HandlerResponse(object):
         :param content_processed: bool set to True if a scripted ContentHandler
         matches and processes a page; If False then the next ContentHandler
         must take over
-        :param user_action: A string denoting user action ('OK‘, 'NOK’,
-        'aborted‘) outside the HTML page.
-        :param cookie_list: A CookieJar instance
+        :param cookie_jar: A CookieJar instance
         :param http_response: A Response instance
         :param outside_html_action: Value from outside_html_actions or None
         :param tester_error_description: optional text if outside_html_action
