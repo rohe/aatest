@@ -6,9 +6,9 @@ from aatest.check import ERROR
 from aatest.check import OK
 from aatest.check import WARNING
 from aatest.check import INCOMPLETE
-from aatest.summation import represent_result
-from aatest.summation import evaluate
 from aatest.summation import condition
+from aatest.summation import eval_state
+from aatest.summation import represent_result
 from aatest.summation import trace_output
 
 __author__ = 'roland'
@@ -40,22 +40,13 @@ class IO(object):
 SIGN = {OK: "+", WARNING: "?", ERROR: "-", INCOMPLETE: "!"}
 
 
-def eval_state(events):
-    res = OK
-    for state in events.get_data('condition'):
-        if state.status > res:
-            res = state.status
-
-    return res
-
-
 class ClIO(IO):
     def flow_list(self, session):
         pass
 
     @staticmethod
-    def represent_result(info, state):
-        return represent_result(info, state)
+    def represent_result(events):
+        return represent_result(events)
 
     def dump_log(self, session, test_id):
         try:
@@ -63,14 +54,15 @@ class ClIO(IO):
         except KeyError:
             pass
         else:
-            try:
-                _pi = self.profile_handler(session).get_profile_info(test_id)
-            except TypeError:
-                _pi = None
-            except Exception as err:
-                raise
-
             sline = 60 * "="
+            _pi = None
+
+            if self.profile_handler:
+                try:
+                    _pi = self.profile_handler(session).get_profile_info(test_id)
+                except Exception as err:
+                    raise
+
             if _pi:
                 output = ["%s: %s" % (k, _pi[k]) for k in ["Issuer", "Profile",
                                                            "Test ID"]]
@@ -89,21 +81,16 @@ class ClIO(IO):
                 "trace": _conv.trace
             }
             output.append(
-                "RESULT: {}".format(self.represent_result(
-                    info, eval_state(_conv.events))))
+                "RESULT: {}".format(self.represent_result(_conv.events)))
             output.append("")
 
             txt = "\n".join(output)
 
             print(txt)
 
-    def result(self, session):
-        _conv = session["conv"]
-        info = {
-            "conditions": _conv.events.get_data('condition'),
-            "trace": _conv.trace
-        }
-        _state = evaluate(session, info)
+    @staticmethod
+    def result(session):
+        _state = eval_state(session["conv"].events)
         print(("{} {}".format(SIGN[_state], session["node"].name)))
 
     def err_response(self, session, where, err):

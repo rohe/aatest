@@ -1,5 +1,5 @@
 import logging
-from aatest.check import assert_summation
+from aatest.summation import assert_summation
 from aatest.verify import Verify
 
 

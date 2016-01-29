@@ -38,7 +38,7 @@ class Operation(object):
     _tests = {"pre": [], "post": []}
 
     def __init__(self, conv, io, sh, test_id='', conf=None, funcs=None,
-                 check_factory=None, cache=None):
+                 check_factory=None, cache=None, **kwargs):
         self.conv = conv
         self.io = io
         self.sh = sh
@@ -83,7 +83,6 @@ class Operation(object):
             if res:
                 return res
 
-
     def _setup(self):
         if self.skip:  # Don't bother
             return
@@ -92,16 +91,7 @@ class Operation(object):
             op(self, arg)
 
     def map_profile(self, profile_map):
-        try:
-            funcs = profile_map[self.__class__][self.profile[0]]
-        except KeyError:
-            pass
-        else:
-            if funcs is None:
-                self.skip = True
-            else:
-                for op, arg in list(funcs.items()):
-                    op(self, arg)
+        pass
 
     def op_setup(self):
         pass
@@ -122,8 +112,7 @@ class Operation(object):
         res = None
         try:
             self.conv.trace.info(
-                "Running {} with kwargs: {}".format(func.__name__
-                                                    , kwargs))
+                "Running {} with kwargs: {}".format(func.__name__, kwargs))
             res = func(**kwargs)
         except Exception as err:
             if not self.expect_exception:

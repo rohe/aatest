@@ -1,4 +1,3 @@
-from aatest.check import assert_summation
 from aatest.check import Check
 from aatest.check import CheckHTTPResponse
 from aatest.check import CRITICAL
@@ -8,6 +7,7 @@ from aatest.check import WARNING
 from aatest.conversation import Conversation
 from aatest.events import Events, EV_HTTP_RESPONSE
 from aatest.events import EV_CONDITION
+from aatest.summation import assert_summation
 
 __author__ = 'roland'
 

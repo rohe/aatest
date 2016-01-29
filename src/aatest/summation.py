@@ -2,13 +2,102 @@ import json
 import os
 import tarfile
 from aatest import END_TAG
+from aatest.check import STATUSCODE
 from aatest.check import WARNING
-from aatest.check import CRITICAL
 from aatest.check import INCOMPLETE
-from aatest.check import assert_summation
+from aatest.check import OK
+from aatest.events import EV_CONDITION
 
 __author__ = 'roland'
 
+
+def assert_summation(events, sid):
+    status = OK
+    result = []
+    for test_result in events.get_data(EV_CONDITION):
+        result.append('{}'.format(test_result))
+        if test_result.status > status:
+            status = test_result.status
+
+    info = {
+        "id": sid,
+        "status": status,
+        "assertions": result
+    }
+
+    return info
+
+
+def completed(events):
+    """
+    Figure out if the test ran to completion
+    :param events: An aatest.events.Events instance
+    :return: True/False
+    """
+    for item in events.get_data(EV_CONDITION):
+        if item.test_id == END_TAG and item.status == OK:
+            return True
+
+    return False
+
+
+def eval_state(events):
+    """
+    The state of the test is the equalt to the worst status encountered
+    :param events: An aatest.events.Events instance
+    :return: An integer representing a status code
+    """
+    res = OK
+    for state in events.get_data(EV_CONDITION):
+        if state.status > res:
+            res = state.status
+
+    return res
+
+
+def represent_result(events):
+    """
+    A textual representation of the status of the test result
+    :param events: An aatest.events.Events instance
+    :return: A text string
+    """
+    _state = eval_state(events)
+    if not completed(events):
+        tag = "PARTIAL RESULT"
+    else:
+        if _state < WARNING:
+            tag = "PASSED"
+        elif _state == INCOMPLETE:
+            tag = "PARTIAL RESULT"
+        else:
+            tag = STATUSCODE[_state]
+
+    info = []
+    for state in events.get_data(EV_CONDITION):
+        if state.status == WARNING:
+            if state.message:
+                info.append(state.message)
+
+    if info:
+        text = "%s\nWarnings:\n%s" % (tag, "\n".join(info))
+    else:
+        text = tag
+
+    return text
+
+
+def store_test_state(session, events):
+    _node = session['node']
+    _node.complete = completed(events)
+
+    _state = eval_state(events)
+    if _node.complete:
+        _node.state = _state
+
+    return _state
+
+
+# -----------------------------------------------------------------------------
 
 def trace_output(trace):
     """
@@ -29,7 +118,7 @@ def condition(events, html=False):
         element = ["<h3>Conditions</h3>", "<pre><code>"]
     else:
         element = ["Conditions\n"]
-    for cond in events.get_data('condition'):
+    for cond in events.get_data(EV_CONDITION):
         element.append('{}'.format(cond))
     if html:
         element.append("</code></pre>")
@@ -39,61 +128,9 @@ def condition(events, html=False):
         return element
 
 
-def end_tags(info):
-    _ll = info["trace"].lastline()
-
-    try:
-        if _ll.endswith(END_TAG) and info["condition"][-1] == END_TAG:
-            return True
-    except IndexError:
-        pass
-
-    return False
-
-
-def represent_result(info, state):
-    if state == INCOMPLETE:
-        return "PARTIAL RESULT"
-
-    if state < WARNING or state > CRITICAL:
-        text = "PASSED"
-    elif state == WARNING:
-        text = "WARNING"
-    else:
-        text = "FAILED"
-
-    warnings = []
-    for state in info["events"].get_data('condition'):
-        if state.status == WARNING:
-            text = 'WARNING'
-            try:
-                warnings.append(state.message)
-            except KeyError:
-                pass
-    if warnings:
-        text = "%s\nWarnings:\n%s" % (text, "\n".join(warnings))
-
-    return text
-
-
 def pprint_json(json_txt):
     _jso = json.loads(json_txt)
     return json.dumps(_jso, sort_keys=True, indent=2, separators=(',', ': '))
-
-
-def evaluate(session, info):
-    _state = INCOMPLETE
-    try:
-        if not session["node"].complete:
-            if end_tags(info):
-                session["node"].complete = True
-                _sum = assert_summation(info["condition"], session["testid"])
-                _state = _sum["status"]
-    except (AttributeError, KeyError):
-        pass
-
-    session["node"].state = _state
-    return _state
 
 
 def mk_tar_dir(issuer, test_profile):

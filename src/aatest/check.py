@@ -13,11 +13,10 @@ WARNING = 2
 ERROR = 3
 CRITICAL = 4
 INTERACTION = 5
-
-INCOMPLETE = 4
+INCOMPLETE = 6
 
 STATUSCODE = ["INFORMATION", "OK", "WARNING", "ERROR", "CRITICAL",
-              "INTERACTION"]
+              "INTERACTION", 'PARTIAL RESULT']
 
 STATUSCODE_TRANSL = dict([(STATUSCODE[i], i) for i in range(len(STATUSCODE))])
 
@@ -59,23 +58,6 @@ class State(object):
             txt = '{} [{}]'.format(txt, self.name)
 
         return txt
-
-
-def assert_summation(events, sid):
-    status = OK
-    result = []
-    for test_result in events.get_data(EV_CONDITION):
-        result.append('{}'.format(test_result))
-        if test_result.status > status:
-            status = test_result.status
-
-    info = {
-        "id": sid,
-        "status": status,
-        "assertions": result
-    }
-
-    return info
 
 
 class Check(object):

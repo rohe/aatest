@@ -7,6 +7,16 @@ from aatest.events import Events
 __author__ = 'roland'
 
 
+EVENT_SEQUENCE = [
+        ['response', HandlerResponse(True)],
+        ['response', HandlerResponse(True)],
+        ['response', Action(None)],
+        ['index', 0],
+        ['index', 1],
+        ['song', 'doremi'],
+]
+
+
 def _eq(l1, l2):
     return set(l1) == set(l2)
 
@@ -137,12 +147,8 @@ class TestEvents():
         assert len(self.events) == 3
 
     def test_last_of(self):
-        self.events.store('response', HandlerResponse(True))
-        self.events.store('response', HandlerResponse(True))
-        self.events.store('response', Action(None))
-        self.events.store('index', 0)
-        self.events.store('index', 1)
-        self.events.store('song', 'doremi')
+        for ev in EVENT_SEQUENCE:
+            self.events.store(*ev)
 
         data = self.events.last_of(['response'])
         assert isinstance(data, Action)
@@ -151,12 +157,8 @@ class TestEvents():
         assert data == 'doremi'
 
     def test_contains(self):
-        self.events.store('response', HandlerResponse(True))
-        self.events.store('response', HandlerResponse(True))
-        self.events.store('response', Action(None))
-        self.events.store('index', 0)
-        self.events.store('index', 1)
-        self.events.store('song', 'doremi')
+        for ev in EVENT_SEQUENCE:
+            self.events.store(*ev)
 
         ev = self.events.events[0]
 
@@ -167,12 +169,8 @@ class TestEvents():
         assert ev not in self.events
 
     def test_sort(self):
-        self.events.store('response', HandlerResponse(True))
-        self.events.store('response', HandlerResponse(True))
-        self.events.store('response', Action(None))
-        self.events.store('index', 0)
-        self.events.store('index', 1)
-        self.events.store('song', 'doremi')
+        for ev in EVENT_SEQUENCE:
+            self.events.store(*ev)
 
         ev = Event(100, typ='foo', data='bar')
 

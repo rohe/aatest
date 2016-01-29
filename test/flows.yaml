@@ -1,0 +1,13 @@
+Flows:
+  AA-Dummy-Default-1:
+    desc: Dummy test, this is the default version
+    profile: xyz
+    sequence:
+      - Operation
+    assert:
+      check: null
+
+Order:
+  - AA-Dummy-Default
+Desc:
+  Default: "Default settings"
