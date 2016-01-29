@@ -2,7 +2,8 @@ __author__ = 'roland'
 
 
 class HandlerResponse(object):
-    def __init__(self, content_processed, outside_html_action=None, tester_error_description=None,
+    def __init__(self, content_processed, outside_html_action=None,
+                 tester_error_description=None,
                  cookie_jar=None, http_response=None, response=None):
         """
 
@@ -14,22 +15,24 @@ class HandlerResponse(object):
         :param cookie_list: A CookieJar instance
         :param http_response: A Response instance
         :param outside_html_action: Value from outside_html_actions or None
-        :param tester_error_description: optional text if outside_html_action is not None
+        :param tester_error_description: optional text if outside_html_action
+        is not None
         :param response: A semi parsed response, might be a dictionary
         """
         self.content_processed = content_processed
-        self.user_action = user_action
+        self.outside_html_action = outside_html_action
         self.cookie_jar = cookie_jar
         self.http_response = http_response
         self.response = response
-
+        self.tester_error_description = tester_error_description
 
 
 class ContentHandler(object):
-        """
-        Process the HTML contents of a response from the test target. This can
-        either be a scripted approach, or invoke a browser.
-        """
+    """
+    Process the HTML contents of a response from the test target. This can
+    either be a scripted approach, or invoke a browser.
+    """
+
     def __init__(self):
         pass
 
@@ -47,8 +50,8 @@ class ContentHandler(object):
         :param verify_ssl: (True/False) whether the ssl certificates must
         be verified. Default is True
         :param cookie_jar: A http.cookiejar.CookieJar instance
-        :param outside_html_actions: a dict describing buttons for the widget outside
-        the html-area, to be used if the test must be aborted
+        :param outside_html_actions: a dict describing buttons for the widget
+        outside the html-area, to be used if the test must be aborted
         :return: A aatest.contenthandler.HandlerResponse instance
         """
         raise NotImplemented()

@@ -7,6 +7,7 @@ from aatest import FatalError
 from aatest.check import STATUSCODE
 from aatest.check import ExpectedError
 from aatest.events import NoSuchEvent
+from aatest.events import EV_CONDITION
 
 __author__ = 'roland'
 
@@ -98,7 +99,7 @@ class Verify(object):
         if err:
             self.exception = err
         chk = self.check_factory(test)()
-        chk(self, self.conv.events.last_item('condition'))
+        chk(self, self.conv.events.last_item(EV_CONDITION))
         if bryt:
             e = FatalError("%s" % err)
             e.trace = "".join(traceback.format_exception(*sys.exc_info()))
