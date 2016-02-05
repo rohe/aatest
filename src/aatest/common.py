@@ -1,4 +1,5 @@
 import logging
+from aatest.events import EV_OPERATION
 from aatest.summation import assert_summation
 from aatest.verify import Verify
 
@@ -66,7 +67,7 @@ def run_flow(profiles, conv, test_id, conf, profile, chk_factory, index=0):
         _oper = cls(conv=conv, profile=profile, test_id=test_id,
                     conf=conf, funcs=funcs, chk_factory=chk_factory)
         conv.operation = _oper
-        conv.events.store('operation', _oper)
+        conv.events.store(EV_OPERATION, _oper)
         _oper.setup(profiles.PROFILEMAP)
         _oper()
 

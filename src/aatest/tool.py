@@ -1,9 +1,10 @@
 import logging
-from aatest.check import State, OK
+from aatest.check import OK
+from aatest.check import State
 
 from aatest import exception_trace
-from aatest import END_TAG
 from aatest.conversation import Conversation
+from aatest.events import EV_CONDITION
 from aatest.verify import Verify
 from aatest.session import Done
 
@@ -140,5 +141,5 @@ class Tester(object):
             raise
 
         if isinstance(_oper, Done):
-            self.conv.events.store('condition', State('done', OK))
+            self.conv.events.store(EV_CONDITION, State('done', OK))
         return True

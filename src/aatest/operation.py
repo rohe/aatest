@@ -6,6 +6,7 @@ import time
 import sys
 
 from oic.utils.http_util import Response
+from aatest.events import EV_PROTOCOL_RESPONSE
 
 from aatest.verify import Verify
 
@@ -38,7 +39,7 @@ class Operation(object):
     _tests = {"pre": [], "post": []}
 
     def __init__(self, conv, io, sh, test_id='', conf=None, funcs=None,
-                 check_factory=None, cache=None, **kwargs):
+                 check_factory=None, cache=None, profile='', **kwargs):
         self.conv = conv
         self.io = io
         self.sh = sh
@@ -47,6 +48,7 @@ class Operation(object):
         self.conf = conf
         self.check_factory = check_factory
         self.cache = cache
+        self.profile = profile
         self.req_args = {}
         self.op_args = {}
         self.expect_exception = None
@@ -127,7 +129,7 @@ class Operation(object):
                     "Expected exception '{}'.".format(self.expect_exception))
             if res:
                 self.conv.trace.reply(res)
-                self.conv.events.store('response', res)
+                self.conv.events.store(EV_PROTOCOL_RESPONSE, res)
 
         return res
 

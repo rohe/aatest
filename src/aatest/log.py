@@ -1,11 +1,14 @@
 import os
 import logging
 from six.moves.urllib.parse import unquote
-#from urllib.parse import unquote
-from aatest import exception_trace, Break
+# from urllib.parse import unquote
+from aatest import Break
+from aatest import exception_trace
 from aatest.check import ERROR
+from aatest.check import State
 from aatest.check import WARNING
 from oic.utils.http_util import Response
+from aatest.events import EV_CONDITION
 
 __author__ = 'roland'
 
@@ -136,8 +139,8 @@ class WebLog(Log):
 
     def display_log(self, root, issuer="", profile="", test_id=""):
         logger.info(
-            "display_log root: '%s' issuer: '%s', profile: '%s' testid: '%s'" % (
-                root, issuer, profile, test_id))
+            "display_log root: '%s' issuer: '%s', profile: '%s' testid: '%s'"
+            % (root, issuer, profile, test_id))
         if test_id:
             path = os.path.join(root, issuer, profile, test_id).replace(":",
                                                                         "%3A")
@@ -171,9 +174,10 @@ class WebLog(Log):
                 session["conv"].test_output.append(
                     {"id": "-", "status": err_type, "message": "%s" % err})
             else:
-                session["conv"].events.store('test_output',
-                    {"id": "-", "status": err_type,
-                     "message": "Error in %s" % where})
+                session["conv"].events.store(
+                    EV_CONDITION,
+                    State(err_type, status=ERROR,
+                          message="Error in %s" % where))
 
     def err_response(self, session, where, err):
         if err:

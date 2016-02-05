@@ -76,10 +76,6 @@ class ClIO(IO):
             output.extend(condition(_conv.events))
             output.extend(["", sline, ""])
             # and lastly the result
-            info = {
-                "events": _conv.events,
-                "trace": _conv.trace
-            }
             output.append(
                 "RESULT: {}".format(self.represent_result(_conv.events)))
             output.append("")
