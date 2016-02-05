@@ -13,5 +13,5 @@ def test_session_init():
     sh = SessionHandler(session={}, **kwargs)
     session = sh.init_session(sh.session, profile=kwargs['profile'])
 
-    assert session.flow_names == ['AA-Dummy-Default-1']
-    assert len(session.tests) == 1
+    assert session['flow_names'] == ['AA-Dummy-Default-1']
+    assert len(session['tests']) == 1
