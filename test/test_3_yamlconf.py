@@ -1,6 +1,6 @@
 from aatest import func
 from aatest import operation
-from aatest.yamlcnf import parse_yaml_conf
+from aatest.parse_cnf import parse_yaml_conf
 
 __author__ = 'roland'
 

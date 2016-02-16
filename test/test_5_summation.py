@@ -13,7 +13,7 @@ from aatest.session import SessionHandler
 from aatest.summation import completed
 from aatest.summation import represent_result
 from aatest.summation import eval_state
-from aatest.yamlcnf import parse_yaml_conf
+from aatest.parse_cnf import parse_yaml_conf
 
 __author__ = 'roland'
 

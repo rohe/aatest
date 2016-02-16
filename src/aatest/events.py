@@ -139,3 +139,19 @@ class Events(object):
 
     def sort(self):
         self.events.sort(key=lambda event: event.timestamp)
+
+    def to_html(self, form='table'):
+        if form == 'list':
+            text = ['<ul>']
+            for ev in self.events:
+                text.append('<li> {}'.format(ev))
+            text.append('</ul>')
+        else:
+            text = ['<table border=1>']
+            for ev in self.events:
+                text.append(
+                    '<tr><td>{time}</td><td>{typ}</td><td>{data}</td></tr>'.format(
+                        time=ev.timestamp, typ=ev.typ, data=ev.data))
+            text.append('</table>')
+
+        return '\n'.join(text)

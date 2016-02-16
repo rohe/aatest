@@ -2,16 +2,20 @@ import logging
 import sys
 import traceback
 
-from aatest import Break, exception_trace
+from aatest import Break
+from aatest import exception_trace
 from aatest import FatalError
 from aatest.check import STATUSCODE
-from aatest.check import ExpectedError
-from aatest.events import NoSuchEvent
 from aatest.events import EV_CONDITION
 
 __author__ = 'roland'
 
 logger = logging.getLogger(__name__)
+
+LABELS = {
+    'cid': 'WHERE', 'status': 'STATUS',
+    'http_status': 'HTTP STATUS', 'message': 'INFO'
+}
 
 
 class MissingTest(Exception):
@@ -19,9 +23,8 @@ class MissingTest(Exception):
 
 
 class Verify(object):
-    def __init__(self, check_factory, msg_factory, conv, cls_name=''):
+    def __init__(self, check_factory, conv, cls_name=''):
         self.check_factory = check_factory
-        self.msg_factory = msg_factory
         self.trace = conv.trace
         self.ignore_check = []
         self.exception = None
@@ -29,21 +32,16 @@ class Verify(object):
         self.cls_name = cls_name
 
     def check_severity(self, stat):
-        #if isinstance(stat, TestResult):
         if stat.status >= 4:
-            try:
-                self.trace.error("WHERE: {}".format(stat.cid))
-            except AttributeError:
-                pass
-            self.trace.error("STATUS: {}".format(STATUSCODE[stat.status]))
-            try:
-                self.trace.error("HTTP STATUS: {}".format(stat.http_status))
-            except AttributeError:
-                pass
-            try:
-                self.trace.error("INFO: {}".format(stat.message))
-            except KeyError:
-                pass
+            for attr, label in LABELS.items():
+                try:
+                    _val = getattr(stat, attr)
+                except AttributeError:
+                    pass
+                else:
+                    if _val:
+                        self.trace.error("{label}: {val}".format(val=_val,
+                                                                 label=label))
 
             try:
                 if not stat.mti:
@@ -52,25 +50,6 @@ class Verify(object):
                     raise FatalError(stat.message)
             except KeyError:
                 pass
-        # elif stat['status'] >= 4:
-        #     self.trace.error("WHERE: {}".format(stat['cid']))
-        #     self.trace.error("STATUS: {}".format(STATUSCODE[stat['status']]))
-        #     try:
-        #         self.trace.error("HTTP STATUS: {}".format(stat['http_status']))
-        #     except KeyError:
-        #         pass
-        #     try:
-        #         self.trace.error("INFO: {}".format(stat['message']))
-        #     except KeyError:
-        #         pass
-        #
-        #     try:
-        #         if not stat['mti']:
-        #             raise Break(stat['message'])
-        #         else:
-        #             raise FatalError(stat['message'])
-        #     except KeyError:
-        #         pass
 
     def do_check(self, test, **kwargs):
         logger.debug("do_check({}, {})".format(test, kwargs))
@@ -121,6 +100,4 @@ class Verify(object):
                 else:
                     kwargs = {}
                 self.do_check(test, **kwargs)
-                if test == ExpectedError:
-                    return False
         return True
