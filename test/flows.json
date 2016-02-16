@@ -1,0 +1,20 @@
+{
+  "Order": [
+    "AA-Dummy-Default"
+  ],
+  "Flows": {
+    "AA-Dummy-Default-1": {
+      "profile": "xyz",
+      "assert": {
+        "check": null
+      },
+      "desc": "Dummy test, this is the default version",
+      "sequence": [
+        "Operation"
+      ]
+    }
+  },
+  "Desc": {
+    "Default": "Default settings"
+  }
+}
