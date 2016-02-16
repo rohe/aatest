@@ -163,6 +163,6 @@ def sort(display_order, flows):
     for k in display_order:
         k += '-'
         l = [z for z in f_names if z.name.startswith(k)]
-        interim.extend(l)
+        interim.extend(sorted(l, key=lambda x: x.name))
 
     return flatten(interim)
