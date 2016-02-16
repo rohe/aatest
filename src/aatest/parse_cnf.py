@@ -6,6 +6,10 @@ from aatest.func import factory as aafactory
 __author__ = 'roland'
 
 
+class MissingParent(Exception):
+    pass
+
+
 def _get_cls(name, factories, use=''):
     if use:
         try:
@@ -111,3 +115,54 @@ def parse_json_conf(cnf_file, cls_factories, func_factory, use=''):
 
     return js
 
+
+class Item(object):
+    def __init__(self, parent, name, desc):
+        self.parent = parent
+        self.desc = desc
+        self.name = name
+        self.child = []
+
+
+def build_hierarchy(flows):
+    items = {}
+
+    for id, desc in flows.items():
+        items[id] = Item('', id, desc)
+
+    for item in items.values():
+        try:
+            _pre = item.desc['super']
+        except KeyError:
+            continue
+        else:
+            try:
+                _parent = items[_pre]
+                _parent.child.append(item)
+                item.parent = _parent
+            except KeyError:
+                raise MissingParent(item.desc['super'])
+
+    return items
+
+
+def flatten(interim):
+    res = []
+    for f in interim:
+        res.append(f)
+        if f.child:
+            res.extend(flatten(sorted(f.child, key=lambda x: x.name)))
+    return res
+
+
+def sort(display_order, flows):
+    items = build_hierarchy(flows)
+    # toplevel
+    f_names = [f for f in items.values() if not f.parent]
+    interim = []
+    for k in display_order:
+        k += '-'
+        l = [z for z in f_names if z.name.startswith(k)]
+        interim.extend(l)
+
+    return flatten(interim)

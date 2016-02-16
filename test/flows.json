@@ -1,6 +1,6 @@
 {
   "Order": [
-    "AA-Dummy-Default"
+    "AA-Dummy"
   ],
   "Flows": {
     "AA-Dummy-Default-1": {
@@ -11,6 +11,36 @@
       "desc": "Dummy test, this is the default version",
       "sequence": [
         "Operation"
+      ]
+    },
+    "AA-Dummy-B": {
+      "super": "AA-Dummy-Default-1",
+      "profile": "xyz",
+      "assert": {
+        "check": null
+      },
+      "desc": "Dummy test, slightly varied",
+      "sequence": [
+        {
+          "Operation": {
+            "set_time_delay": 120
+          }
+        }
+      ]
+    },
+    "AA-Dummy-A": {
+      "super": "AA-Dummy-B",
+      "profile": "xyz",
+      "assert": {
+        "check": null
+      },
+      "desc": "Dummy test, modified",
+      "sequence": [
+        {
+          "Operation": {
+            "set_time_delay": 20
+          }
+        }
       ]
     }
   },

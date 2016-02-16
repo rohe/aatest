@@ -1,5 +1,6 @@
 import copy
 import logging
+from aatest.parse_cnf import sort
 from aatest import END_TAG
 from aatest.operation import Operation
 
@@ -64,13 +65,8 @@ class SessionHandler(object):
         if profile is None:
             profile = self.profile
 
-        f_names = list(self.test_flows.keys())
-        f_names.sort()
-        session["flow_names"] = []
-        for k in self.order:
-            k += '-'
-            l = [z for z in f_names if z.startswith(k)]
-            session["flow_names"].extend(l)
+        _flows = sort(self.order, self.test_flows)
+        session["flow_names"] = [f.name for f in _flows]
 
         _tests =[]
         for k in session["flow_names"]:
