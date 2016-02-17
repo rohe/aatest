@@ -131,8 +131,7 @@ class Tester(object):
 
         try:
             if self.conv.flow["assert"]:
-                _ver = Verify(self.chk_factory, self.conv.msg_factory,
-                              self.conv)
+                _ver = Verify(self.chk_factory, self.conv)
                 _ver.test_sequence(self.conv.flow["assert"])
         except KeyError:
             pass
