@@ -38,10 +38,10 @@ def request_with_client_http_session(instance, method, url, **kwargs):
 class Operation(object):
     _tests = {"pre": [], "post": []}
 
-    def __init__(self, conv, io, sh, test_id='', conf=None, funcs=None,
+    def __init__(self, conv, inut, sh, test_id='', conf=None, funcs=None,
                  check_factory=None, cache=None, profile='', **kwargs):
         self.conv = conv
-        self.io = io
+        self.inut = inut
         self.sh = sh
         self.funcs = funcs or {}
         self.test_id = test_id
@@ -68,8 +68,7 @@ class Operation(object):
         else:
             cls_name = self.__class__.__name__
             if self.tests["pre"] or self.tests["post"]:
-                _ver = Verify(self.check_factory, self.conv.msg_factory,
-                              self.conv, cls_name=cls_name)
+                _ver = Verify(self.check_factory, self.conv, cls_name=cls_name)
             else:
                 _ver = None
 
@@ -129,7 +128,8 @@ class Operation(object):
                     "Expected exception '{}'.".format(self.expect_exception))
             if res:
                 self.conv.trace.reply(res)
-                self.conv.events.store(EV_PROTOCOL_RESPONSE, res)
+                self.conv.events.store(EV_PROTOCOL_RESPONSE, res,
+                                       sender='catch_exception')
 
         return res
 
@@ -143,8 +143,8 @@ class Operation(object):
 class Notice(Operation):
     template = ""
 
-    def __init__(self, conv, io, sh, **kwargs):
-        Operation.__init__(self, conv, io, sh, **kwargs)
+    def __init__(self, conv, inut, sh, **kwargs):
+        Operation.__init__(self, conv, inut, sh, **kwargs)
         self.message = ""
 
     def args(self):
@@ -152,9 +152,9 @@ class Notice(Operation):
 
     def __call__(self, *args, **kwargs):
         resp = Response(mako_template=self.template,
-                        template_lookup=self.io.lookup,
+                        template_lookup=self.inut.lookup,
                         headers=[])
-        return resp(self.io.environ, self.io.start_response,
+        return resp(self.inut.environ, self.inut.start_response,
                     **self.args())
 
 
@@ -167,15 +167,15 @@ class Note(Notice):
     def args(self):
         return {
             "url": "%scontinue?path=%s&index=%d" % (
-                self.io.conf.BASE, self.test_id, self.sh.session["index"]),
-            "back": self.io.conf.BASE,
+                self.inut.conf.BASE, self.test_id, self.sh.session["index"]),
+            "back": self.inut.conf.BASE,
             "note": self.message,
         }
 
 
 class TimeDelay(Operation):
-    def __init__(self, conv, io, sh, **kwargs):
-        Operation.__init__(self, conv, io, sh, **kwargs)
+    def __init__(self, conv, inut, sh, **kwargs):
+        Operation.__init__(self, conv, inut, sh, **kwargs)
         self.delay = 30
 
     def __call__(self, *args, **kwargs):

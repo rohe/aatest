@@ -12,7 +12,7 @@ from aatest import FatalError
 from aatest import Break
 from aatest.check import ExpectedError, TestResult
 from aatest.check import INTERACTION
-from aatest.events import Events
+from aatest.events import Events, EV_RESPONSE, EV_HTTP_RESPONSE, EV_CONDITION
 from aatest.interaction import Interaction
 from aatest.interaction import Action
 from aatest.interaction import InteractionNeeded
@@ -210,10 +210,11 @@ class Conversation(object):
                 _response = _op(self.entity, self, self.trace, url,
                                 _response, content, self.features)
                 if isinstance(_response, dict):
-                    self.events.store('response', _response)
+                    self.events.store(EV_RESPONSE, _response,
+                                      sender=self.__class__)
                     return _response
                 self.events.store('position', url)
-                self.events.store('http response', _response)
+                self.events.store(EV_HTTP_RESPONSE, _response)
                 self.events.store('received', _response.text)
 
                 if _response.status_code >= 400:
@@ -229,7 +230,7 @@ class Conversation(object):
                                              message="{}".format(err)))
                 raise FatalError
 
-        self.events.store('http response', _response)
+        self.events.store(EV_HTTP_RESPONSE, _response, sender=self.__class__)
         try:
             self.events.store('content', _response.text)
         except AttributeError:
@@ -327,13 +328,14 @@ class Conversation(object):
             try:
                 self.do_query()
             except InteractionNeeded:
-                self.events.store('condition',
+                self.events.store(EV_CONDITION,
                                   TestResult(status=INTERACTION,
                                              message=self.events.last_item(
                                                  'received'),
                                              test_id="exception",
                                              name="interaction needed",
-                                             url=self.position))
+                                             url=self.position),
+                                  sender=self.__class__)
                 break
             except FatalError:
                 raise
@@ -405,7 +407,8 @@ class Conversation(object):
     #             setattr(self.entity, key, val)
     #
     #     try:
-    #         self.entity.registration_response = RegistrationResponse().from_json(
+    #         self.entity.registration_response = RegistrationResponse(
+    # ).from_json(
     #             state["client"]["registration_resp"])
     #     except KeyError:
     #         pass

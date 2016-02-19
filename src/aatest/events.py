@@ -1,5 +1,7 @@
 import time
 
+from requests import Response
+
 __author__ = 'roland'
 
 # standard event labels
@@ -27,19 +29,21 @@ class NoSuchEvent(Exception):
 
 
 class Event(object):
-    def __init__(self, timestamp=0, typ='', data=None, ref='', sub=''):
+    def __init__(self, timestamp=0, typ='', data=None, ref='', sub='',
+                 sender=''):
         self.timestamp = timestamp or time.time()
         self.typ = typ
         self.data = data
         self.ref = ref
         self.sub = sub
+        self.sender = sender
 
     def __str__(self):
         return '{}:{}:{}'.format(self.timestamp, self.typ, self.data)
 
     def __eq__(self, other):
         if isinstance(other, Event):
-            for param in ['timestamp', 'typ', 'data', 'ref', 'sub']:
+            for param in ['timestamp', 'typ', 'data', 'ref', 'sub', 'sender']:
                 if getattr(self, param) != getattr(other, param):
                     return False
         return True
@@ -54,9 +58,9 @@ class Events(object):
     def __init__(self):
         self.events = []
 
-    def store(self, typ, data, ref=''):
+    def store(self, typ, data, ref='', sub='', sender=''):
         index = time.time()
-        self.events.append(Event(index, typ, data, ref))
+        self.events.append(Event(index, typ, data, ref, sub, sender))
         return index
 
     def by_index(self, index):
@@ -155,3 +159,6 @@ class Events(object):
             text.append('</table>')
 
         return '\n'.join(text)
+
+    def __str__(self):
+        return '\n'.join(['{}'.format(ev) for ev in self.events])

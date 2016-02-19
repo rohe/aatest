@@ -4,7 +4,11 @@ import json
 import re
 
 from urllib.parse import urlparse
+
+from aatest.events import EV_HTTP_RESPONSE, EV_RESPONSE
+from future.backports.urllib.response import addinfourl
 from robobrowser import RoboBrowser
+from six import StringIO
 
 from aatest import contenthandler
 from aatest import OperationError
@@ -35,6 +39,11 @@ class InteractionNeeded(Exception):
 
 def no_func():
     return None
+
+
+def response2addinfourl(response):
+    fp = StringIO(response.text)
+    return addinfourl(fp, response.headers, response.url)
 
 
 class RResponse():
@@ -403,28 +412,31 @@ class ContentHandler(contenthandler.ContentHandler):
         try:
             response = _op(self, url, response, self.features, **op_args)
             if isinstance(response, dict):
-                self.conv.events.store('response', response)
-                return HandlerResponse(True, 'OK', response=response)
+                self.conv.events.store(EV_RESPONSE, response,
+                                       sender=self.__class__)
+                return HandlerResponse(True, 'OK', urllib_response=response)
             else:
-                self.conv.events.store('http response', response)
+                self.conv.events.store(EV_HTTP_RESPONSE,
+                                       response2addinfourl(response),
+                                       sender=self.__class__)
 
             if response.status_code >= 400:
-                return HandlerResponse(True, http_response=response)
+                return HandlerResponse(False, urllib_response=response)
         except (FatalError, InteractionNeeded, OperationError):
             raise
         except Exception as err:
             self.conv.trace.error(err)
         else:
-            return HandlerResponse(True, 'OK', http_response=response)
+            return HandlerResponse(True, 'OK', urllib_response=response)
 
-    def handle_response(self, http_response, auto_close_urls, target_url,
-                        conv=None, verify_ssl=True, cookie_jar=None):
+    def handle_response(self, http_response, auto_close_urls,
+                        conv=None, verify_ssl=True, cookie_jar=None,
+                        outside_html_actions=None):
         """
 
         :param http_response: The HTTP response to handle
         :param auto_close_urls: A list of URLs that if encountered should
         lead to an immediate break in processing.
-        :param target_url: ???
         :param conv: A aatest.Conversation instance
         :param verify_ssl: (True/False) whether the ssl certificates must
         be verified. Default is True

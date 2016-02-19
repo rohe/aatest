@@ -177,7 +177,8 @@ class WebLog(Log):
                 session["conv"].events.store(
                     EV_CONDITION,
                     State(err_type, status=ERROR,
-                          message="Error in %s" % where))
+                          message="Error in %s" % where),
+                    sender='log_fault')
 
     def err_response(self, session, where, err):
         if err:

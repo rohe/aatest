@@ -41,9 +41,7 @@ class SessionHandler(object):
             session = self.session
         _keys = list(session.keys())
         for key in _keys:
-            if key.startswith("_"):
-                continue
-            elif key in ["tests", "flow_names", "response_type",
+            if key in ["tests", "flow_names", "response_type",
                          "test_info", "profile"]:  # don't touch !
                 continue
             else:
@@ -103,3 +101,9 @@ class SessionHandler(object):
             return True
         else:
             return False
+
+    def dump(self, filename):
+        pass
+
+    def load(self, filename):
+        pass

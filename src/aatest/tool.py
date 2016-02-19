@@ -1,4 +1,5 @@
 import logging
+from saml2.httputil import Response
 from aatest.check import OK
 from aatest.check import State
 
@@ -25,10 +26,10 @@ class ConfigurationError(Exception):
 
 
 class Tester(object):
-    def __init__(self, io, sh, profile, flows, check_factory,
+    def __init__(self, inut, sh, profile, flows, check_factory,
                  msg_factory, cache, make_entity, map_prof,
                  trace_cls, com_handler, **kwargs):
-        self.io = io
+        self.inut = inut
         self.sh = sh
         self.conv = None
         self.profile = profile
@@ -64,18 +65,18 @@ class Tester(object):
         self.conv.sequence = self.sh.session["sequence"]
         self.sh.session["conv"] = self.conv
         return True
-        
-    def run(self, test_id, cinfo, **kw_args):
-        if not self.setup(test_id, cinfo, **kw_args):
+
+    def run(self, test_id, **kw_args):
+        if not self.setup(test_id, **kw_args):
             raise ConfigurationError()
 
         # noinspection PyTypeChecker
         try:
-            return self.run_flow(test_id, kw_args["conf"])
+            return self.run_flow(test_id)
         except Exception as err:
             exception_trace("", err, logger)
-            self.io.dump_log(self.sh.session, test_id)
-            return self.io.err_response(self.sh.session, "run", err)
+            self.inut.print_info(self.sh.session, test_id)
+            return self.inut.err_response(self.sh.session, "run", err)
 
     def handle_response(self, resp, index, oper=None):
         return None
@@ -102,9 +103,9 @@ class Tester(object):
                 funcs = {}
 
             logger.info("<--<-- {} --- {} -->-->".format(index, cls))
-            self.conv.events.store('operation', cls)
+            self.conv.events.store('operation', cls, sender='run_flow')
             try:
-                _oper = cls(conv=self.conv, io=self.io, sh=self.sh,
+                _oper = cls(conv=self.conv, inut=self.inut, sh=self.sh,
                             profile=self.profile, test_id=test_id,
                             funcs=funcs, check_factory=self.chk_factory,
                             cache=self.cache)
@@ -118,14 +119,18 @@ class Tester(object):
             except Exception as err:
                 exception_trace('run_flow', err)
                 self.sh.session["index"] = index
-                return self.io.err_response(self.sh.session, "run_sequence",
-                                            err)
+                return self.inut.err_response(self.sh.session, "run_sequence",
+                                              err)
             else:
-                resp = self.com_handler(resp)
+                if isinstance(resp, Response):
+                    return resp
+
                 if resp:
+                    if self.com_handler:
+                        resp = self.com_handler(resp)
                     resp = _oper.handle_response(resp.response)
                     if resp:
-                        return self.io.respond(resp)
+                        return self.inut.respond(resp)
 
             index += 1
 
@@ -140,5 +145,6 @@ class Tester(object):
             raise
 
         if isinstance(_oper, Done):
-            self.conv.events.store(EV_CONDITION, State('done', OK))
+            self.conv.events.store(EV_CONDITION, State('Done', OK),
+                                   sender='run_flow')
         return True

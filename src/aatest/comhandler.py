@@ -57,7 +57,7 @@ class ComHandler(object):
             handled = False
             for ct in self.content_handlers:
                 resp = ct.handle_response(http_response, auto_close_urls,
-                                          target_url, conv=self.conv,
+                                          conv=self.conv,
                                           verify_ssl=self.verify_ssl,
                                           cookie_jar=self.conv.entity.cookiejar)
                 if resp.content_processed:

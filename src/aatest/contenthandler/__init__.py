@@ -4,14 +4,14 @@ __author__ = 'roland'
 class HandlerResponse(object):
     def __init__(self, content_processed, outside_html_action=None,
                  tester_error_description=None,
-                 cookie_jar=None, http_response=None, response=None):
+                 cookie_jar=None, urllib_request=None, urllib_response=None):
         """
 
         :param content_processed: bool set to True if a scripted ContentHandler
         matches and processes a page; If False then the next ContentHandler
         must take over
         :param cookie_jar: A CookieJar instance
-        :param http_response: A Response instance
+        :param urllib_response: A urllib.response.addinfourl instance
         :param outside_html_action: Value from outside_html_actions or None
         :param tester_error_description: optional text if outside_html_action
         is not None
@@ -20,8 +20,8 @@ class HandlerResponse(object):
         self.content_processed = content_processed
         self.outside_html_action = outside_html_action
         self.cookie_jar = cookie_jar
-        self.http_response = http_response
-        self.response = response
+        self.urllib_request = urllib_request
+        self.urllib_response = urllib_response
         self.tester_error_description = tester_error_description
 
 

@@ -35,7 +35,7 @@ def completed(events):
     :return: True/False
     """
     for item in events.get_data(EV_CONDITION):
-        if item.test_id == END_TAG and item.status == OK:
+        if item.test_id == "Done" and item.status == OK:
             return True
 
     return False

@@ -67,7 +67,7 @@ def run_flow(profiles, conv, test_id, conf, profile, chk_factory, index=0):
         _oper = cls(conv=conv, profile=profile, test_id=test_id,
                     conf=conf, funcs=funcs, chk_factory=chk_factory)
         conv.operation = _oper
-        conv.events.store(EV_OPERATION, _oper)
+        conv.events.store(EV_OPERATION, _oper, sender='run_flow')
         _oper.setup(profiles.PROFILEMAP)
         _oper()
 
@@ -75,7 +75,7 @@ def run_flow(profiles, conv, test_id, conf, profile, chk_factory, index=0):
 
     try:
         if conv.flow["tests"]:
-            _ver = Verify(chk_factory, conv.msg_factory, conv)
+            _ver = Verify(chk_factory, conv)
             _ver.test_sequence(conv.flow["tests"])
     except KeyError:
         pass

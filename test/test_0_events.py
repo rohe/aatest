@@ -185,3 +185,10 @@ class TestEvents():
         # should now be first
 
         assert ev == self.events.events[0]
+
+    def test_print(self):
+        for ev in EVENT_SEQUENCE:
+            self.events.store(*ev)
+
+        s = '{}'.format(self.events)
+        assert s
