@@ -1,5 +1,12 @@
 import logging
-from saml2.time_util import in_a_while
+import os
+from future.backports.urllib.parse import quote
+
+try:
+    from saml2.time_util import in_a_while
+except ImportError:
+    from oic.utils.time_util import in_a_while
+
 from aatest import exception_trace
 
 from aatest.check import ERROR
@@ -19,29 +26,44 @@ TEST_RESULTS = {OK: "OK", ERROR: "ERROR", WARNING: "WARNING",
                 INCOMPLETE: "INCOMPLETE"}
 
 
+def safe_path(eid, *args):
+    s = quote(eid)
+    s = s.replace('/', '%2F')
+
+    path = 'log/{}'.format(s)
+    for arg in args[:-1]:
+        path = '{}/{}'.format(path, arg)
+
+    if not os.path.isdir(path):
+        os.makedirs(path)
+
+    return '{}/{}'.format(path, args[-1])
+
+
 class IO(object):
     def __init__(self, flows, profile, desc='', profile_handler=None,
-                 cache=None, **kwargs):
+                 cache=None, session=None, **kwargs):
         self.flows = flows
         self.cache = cache
         self.test_profile = profile
         self.profile_handler = profile_handler
         self.desc = desc
+        self.session = session
 
     def represent_result(self, events):
         return represent_result(events)
 
-    def print_info(self, session, test_id, filename=''):
-        if 'conv' not in session:
+    def print_info(self, test_id, filename=''):
+        if 'conv' not in self.session:
             return
         else:
-            _conv = session["conv"]
+            _conv = self.session["conv"]
 
         sline = 60 * "="
         _pi = None
 
         if self.profile_handler:
-            ph = self.profile_handler(session)
+            ph = self.profile_handler(self.session)
             try:
                 _pi = ph.get_profile_info(test_id)
             except Exception as err:
@@ -75,7 +97,7 @@ class IO(object):
         else:
             print(txt)
 
-    def err_response(self, session, where, err):
+    def err_response(self, where, err):
         pass
 
 
@@ -84,25 +106,24 @@ SIGN = {OK: "+", WARNING: "?", ERROR: "-", INCOMPLETE: "!"}
 
 class ClIO(IO):
     def __init__(self, flows, profile, desc='', profile_handler=None,
-                 cache=None, **kwargs):
+                 cache=None, session=None, **kwargs):
         IO.__init__(self, flows, profile, desc, profile_handler, cache,
-                    **kwargs)
+                    session=session, **kwargs)
 
-    def flow_list(self, session):
+    def flow_list(self):
         pass
 
-    @staticmethod
-    def result(session):
-        _state = eval_state(session["conv"].events)
-        print(("{} {}".format(SIGN[_state], session["node"].name)))
+    def result(self):
+        _state = eval_state(self.session["conv"].events)
+        print(("{} {}".format(SIGN[_state], self.session["node"].name)))
 
-    def err_response(self, session, where, err):
+    def err_response(self, where, err):
         if err:
             exception_trace(where, err, logger)
 
         try:
-            _tid = session["testid"]
-            self.print_info(session, _tid)
+            _tid = self.session["testid"]
+            self.print_info(self.session, _tid)
         except KeyError:
             pass
 

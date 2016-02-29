@@ -27,77 +27,64 @@ class Node(object):
 
 
 class SessionHandler(object):
-    def __init__(self, session, profile='', flows=None, order=None,
-                 **kwargs):
-        self.session = session or {}
+    def __init__(self, profile='', flows=None, order=None, **kwargs):
         self.profile = profile
         self.test_flows = flows
         self.order = order
         self.extra = kwargs
+        self._dict = {}
 
-    def session_setup(self, session=None, path="", index=0):
+    def session_setup(self, path="", index=0):
         logger.info("session_setup")
-        if session is None:
-            session = self.session
-        _keys = list(session.keys())
+
+        _keys = list(self.keys())
         for key in _keys:
             if key in ["tests", "flow_names", "response_type",
-                         "test_info", "profile"]:  # don't touch !
+                       "test_info", "profile"]:  # don't touch !
                 continue
             else:
-                del session[key]
+                del self[key]
 
-        session["testid"] = path
-        for node in session["tests"]:
+        self["testid"] = path
+        for node in self["tests"]:
             if node.name == path:
-                session["node"] = node
+                self["node"] = node
                 break
 
-        session["flow"] = copy.deepcopy(self.test_flows[path])
-        session["sequence"] = session["flow"]["sequence"]
-        session["sequence"].append(Done)
-        session["index"] = index
-        self.session = session
+        self["flow"] = copy.deepcopy(self.test_flows[path])
+        self["sequence"] = self["flow"]["sequence"]
+        self["sequence"].append(Done)
+        self["index"] = index
 
-    def init_session(self, session, profile=None):
-        if profile is None:
-            profile = self.profile
-
+    def init_session(self, profile=None):
         _flows = sort(self.order, self.test_flows)
-        session["flow_names"] = [f.name for f in _flows]
+        self["flow_names"] = [f.name for f in _flows]
 
         _tests =[]
-        for k in session["flow_names"]:
+        for k in self["flow_names"]:
             try:
                 kwargs = {"mti": self.test_flows[k]["mti"]}
             except KeyError:
                 kwargs = {}
             _tests.append(Node(k, self.test_flows[k]["desc"], **kwargs))
 
-        session["tests"] = _tests
-        session["test_info"] = {}
-        session["profile"] = profile
-        self.session = session
-        return session
+        self["tests"] = _tests
+        self["test_info"] = {}
+        self["profile"] = profile or self.profile
+        return self._dict
 
-    def reset_session(self, session=None, profile=None):
-        if not session:
-            session = self.session
-
-        _keys = list(session.keys())
+    def reset_session(self, profile=None):
+        _keys = list(self.keys())
         for key in _keys:
             if key.startswith("_"):
                 continue
             else:
-                del session[key]
-        self.init_session(session, profile)
+                del self[key]
+        self.init_session(profile)
 
-    def session_init(self, session=None):
-        if not session:
-            session = self.session
-
-        if "tests" not in session:
-            self.init_session(session)
+    def session_init(self):
+        if "tests" not in self:
+            self.init_session()
             return True
         else:
             return False
@@ -107,3 +94,24 @@ class SessionHandler(object):
 
     def load(self, filename):
         pass
+
+    def keys(self):
+        return self._dict.keys()
+
+    def update(self, new):
+        self._dict.update(new)
+
+    def __delitem__(self, item):
+        del self._dict[item]
+
+    def __getitem__(self, item):
+        return self._dict[item]
+
+    def __setitem__(self, key, value):
+        self._dict[key] = value
+
+    def __contains__(self, item):
+        return item in self._dict
+
+    def items(self):
+        return self._dict.items()

@@ -27,8 +27,8 @@ class ConfigurationError(Exception):
 
 class Tester(object):
     def __init__(self, inut, sh, profile, flows, check_factory,
-                 msg_factory, cache, make_entity, map_prof,
-                 trace_cls, com_handler, **kwargs):
+                 msg_factory, cache, make_entity=None, map_prof=None,
+                 trace_cls=None, com_handler=None, **kwargs):
         self.inut = inut
         self.sh = sh
         self.conv = None
@@ -62,8 +62,8 @@ class Tester(object):
                                  trace_cls=self.trace_cls)
         _cli.conv = self.conv
         self.com_handler.conv = self.conv
-        self.conv.sequence = self.sh.session["sequence"]
-        self.sh.session["conv"] = self.conv
+        self.conv.sequence = self.sh["sequence"]
+        self.sh["conv"] = self.conv
         return True
 
     def run(self, test_id, **kw_args):
@@ -72,18 +72,18 @@ class Tester(object):
 
         # noinspection PyTypeChecker
         try:
-            return self.run_flow(test_id)
+            return self.run_flow(test_id, conf=kw_args['conf'])
         except Exception as err:
             exception_trace("", err, logger)
-            self.inut.print_info(self.sh.session, test_id)
-            return self.inut.err_response(self.sh.session, "run", err)
+            self.inut.print_info(test_id)
+            return self.inut.err_response("run", err)
 
     def handle_response(self, resp, index, oper=None):
         return None
 
-    def run_flow(self, test_id, index=0, profiles=None):
+    def run_flow(self, test_id, index=0, profiles=None, **kwargs):
         logger.info("<=<=<=<=< %s >=>=>=>=>" % test_id)
-        _ss = self.sh.session
+        _ss = self.sh
         try:
             _ss["node"].complete = False
         except KeyError:
@@ -118,9 +118,8 @@ class Tester(object):
                 resp = _oper()
             except Exception as err:
                 exception_trace('run_flow', err)
-                self.sh.session["index"] = index
-                return self.inut.err_response(self.sh.session, "run_sequence",
-                                              err)
+                self.sh["index"] = index
+                return self.inut.err_response("run_sequence", err)
             else:
                 if isinstance(resp, Response):
                     return resp

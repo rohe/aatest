@@ -1,7 +1,6 @@
 import json
 import os
 import tarfile
-from aatest import END_TAG
 from aatest.check import STATUSCODE
 from aatest.check import WARNING
 from aatest.check import INCOMPLETE

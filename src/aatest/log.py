@@ -7,8 +7,9 @@ from aatest import exception_trace
 from aatest.check import ERROR
 from aatest.check import State
 from aatest.check import WARNING
-from oic.utils.http_util import Response
 from aatest.events import EV_CONDITION
+
+from oic.utils.http_util import Response
 
 __author__ = 'roland'
 

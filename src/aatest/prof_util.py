@@ -23,7 +23,7 @@ class ProfileHandler(object):
         else:
             try:
                 iss = _conv.entity.provider_info["issuer"]
-            except TypeError:
+            except (TypeError, KeyError):
                 iss = ""
 
             profile = self.to_profile("dict")
