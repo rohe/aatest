@@ -1,7 +1,6 @@
 import inspect
 import traceback
 import sys
-from aatest.events import EV_CONDITION
 from aatest.events import EV_RESPONSE
 from aatest.events import EV_HTTP_RESPONSE
 
@@ -14,6 +13,7 @@ ERROR = 3
 CRITICAL = 4
 INTERACTION = 5
 INCOMPLETE = 6
+NOT_APPLICABLE = 7
 
 STATUSCODE = ["INFORMATION", "OK", "WARNING", "ERROR", "CRITICAL",
               "INTERACTION", 'PARTIAL RESULT']

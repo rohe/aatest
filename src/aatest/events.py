@@ -162,3 +162,6 @@ class Events(object):
 
     def __str__(self):
         return '\n'.join(['{}'.format(ev) for ev in self.events])
+
+    def reset(self):
+        self.events = []

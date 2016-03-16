@@ -5,7 +5,9 @@ import traceback
 from aatest import Break
 from aatest import exception_trace
 from aatest import FatalError
-from aatest.check import STATUSCODE
+from aatest.check import CRITICAL
+from aatest.check import NOT_APPLICABLE
+from aatest.check import INTERACTION
 from aatest.events import EV_CONDITION
 
 __author__ = 'roland'
@@ -32,7 +34,7 @@ class Verify(object):
         self.cls_name = cls_name
 
     def check_severity(self, stat):
-        if stat.status >= 4:
+        if stat.status in [CRITICAL, INTERACTION]:
             for attr, label in LABELS.items():
                 try:
                     _val = getattr(stat, attr)
@@ -71,8 +73,12 @@ class Verify(object):
             else:
                 if self.cls_name:
                     stat.context = self.cls_name
-                self.conv.events.store('condition', stat, sender=self.__class__)
-                self.check_severity(stat)
+                if stat.status == NOT_APPLICABLE:
+                    pass
+                else:
+                    self.conv.events.store('condition', stat,
+                                           sender=self.__class__)
+                    self.check_severity(stat)
 
     def err_check(self, test, err=None, bryt=True):
         if err:

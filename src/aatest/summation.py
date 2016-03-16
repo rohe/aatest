@@ -2,6 +2,8 @@ import json
 import os
 import tarfile
 from aatest.check import STATUSCODE
+from aatest.check import ERROR
+from aatest.check import CRITICAL
 from aatest.check import WARNING
 from aatest.check import INCOMPLETE
 from aatest.check import OK
@@ -52,6 +54,15 @@ def eval_state(events):
             res = state.status
 
     return res
+
+
+def get_errors(events):
+    res = []
+    for item in events.get_data(EV_CONDITION):
+        if item.status in [ERROR, CRITICAL]:
+            res.append(item.message)
+
+    return '. '.join(res)
 
 
 def represent_result(events):

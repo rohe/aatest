@@ -127,11 +127,18 @@ class Tester(object):
                 if resp:
                     if self.com_handler:
                         resp = self.com_handler(resp)
-                    resp = _oper.handle_response(resp.response)
+
+                    try:
+                        resp = _oper.handle_response(resp.response)
+                    except AttributeError:
+                        resp = _oper.handle_response(resp.text)
+
                     if resp:
                         return self.inut.respond(resp)
 
             index += 1
+
+        _ss['index'] = self.conv.index = index
 
         try:
             if self.conv.flow["assert"]:
