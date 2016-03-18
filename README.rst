@@ -1,5 +1,4 @@
-A set of tools for testing OAuth2/OpenID Connect standard compliance
-====================================================================
+Basic test framework for Authentication/Authorization standards
+===============================================================
 
-Basically two scripts, one for OAuth2 and one for OpenID Connect
-for testing compliance.
+Common framework for SAML2 as well as OAuth2 based protocols compliance testing.
