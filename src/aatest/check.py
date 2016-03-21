@@ -20,8 +20,28 @@ STATUSCODE = ["INFORMATION", "OK", "WARNING", "ERROR", "CRITICAL",
 
 STATUSCODE_TRANSL = dict([(STATUSCODE[i], i) for i in range(len(STATUSCODE))])
 
-CONT_JSON = "application/json"
-CONT_JWT = "application/jwt"
+END_TAG = "==== END ===="
+
+
+class TestResult(object):
+    name = 'test_result'
+
+    def __init__(self, test_id, status, name, mti=False):
+        self.test_id = test_id
+        self.status = status
+        self.name = name
+        self.mti = mti
+        self.message = ''
+        self.http_status = 0
+        self.cid = ''
+
+    def __str__(self):
+        if self.status:
+            return '{}: status={}, message={}'.format(self.test_id,
+                                                      STATUSCODE[self.status],
+                                                      self.message)
+        else:
+            return '{}: status={}'.format(self.test_id, STATUSCODE[self.status])
 
 
 class State(object):

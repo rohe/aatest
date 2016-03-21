@@ -80,7 +80,12 @@ class Events(object):
         return [d.data for d in self.get(typ)]
 
     def get_messages(self, typ, msg_cls):
-        return [m.data for m in self.get(typ) if isinstance(m.data, msg_cls)]
+        res = []
+        for m in self.get(typ):
+            if m.data.__class__ == msg_cls:
+                res.append(m.data)
+        #return [m.data for m in self.get(typ) if isinstance(m.data, msg_cls)]
+        return res
 
     def last(self, typ):
         res = self.get(typ)

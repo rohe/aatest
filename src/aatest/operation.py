@@ -167,7 +167,7 @@ class Note(Notice):
     def args(self):
         return {
             "url": "%scontinue?path=%s&index=%d" % (
-                self.inut.conf.BASE, self.test_id, self.sh.session["index"]),
+                self.inut.conf.BASE, self.test_id, self.sh["index"]),
             "back": self.inut.conf.BASE,
             "note": self.message,
         }
