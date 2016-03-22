@@ -88,7 +88,7 @@ class Trace(object):
 
     @staticmethod
     def format(resp):
-        raise NotImplemented
+        raise NotImplemented()
 
     def request(self, msg):
         delta = time.time() - self.start
@@ -99,7 +99,7 @@ class Trace(object):
         self.trace.append("%f <-- %s" % (delta, msg))
 
     def response(self, resp):
-        raise NotImplemented
+        raise NotImplemented()
 
     def info(self, msg):
         delta = time.time() - self.start
