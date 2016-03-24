@@ -6,7 +6,8 @@ import time
 import sys
 
 from oic.utils.http_util import Response
-from aatest.events import EV_PROTOCOL_RESPONSE
+
+from aatest.events import EV_EXCEPTION
 
 from aatest.verify import Verify
 
@@ -55,6 +56,7 @@ class Operation(object):
         self.expect_error = None
         self.sequence = []
         self.skip = False
+        self.fail = False
         self.allowed_status_codes = [200]
         # detach
         self.tests = copy.deepcopy(self._tests)
@@ -116,6 +118,7 @@ class Operation(object):
                 "Running {} with kwargs: {}".format(func.__name__, kwargs))
             res = func(**kwargs)
         except Exception as err:
+            self.conv.events.store(EV_EXCEPTION, err)
             if not self.expect_exception:
                 raise
             elif not err.__class__.__name__ == self.expect_exception:
@@ -128,8 +131,6 @@ class Operation(object):
                     "Expected exception '{}'.".format(self.expect_exception))
             if res:
                 self.conv.trace.reply(res)
-                self.conv.events.store(EV_PROTOCOL_RESPONSE, res,
-                                       sender='catch_exception')
 
         return res
 
