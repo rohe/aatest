@@ -6,6 +6,7 @@ __author__ = 'roland'
 
 # standard event labels
 EV_CONDITION = 'condition'
+EV_EXCEPTION = 'exception'
 EV_FAULT = 'fault'
 EV_HANDLER_RESPONSE = 'handler response'
 EV_HTTP_ARGS = 'http args'
@@ -26,6 +27,18 @@ EV_URL = 'url'
 
 class NoSuchEvent(Exception):
     pass
+
+
+class HTTPResponse(object):
+    def __init__(self, response):
+        self.status_code = response.status_code
+        self.headers = response.headers
+        self.url = response.url
+        # Should perhaps be more intelligent about this
+        if self.status_code >= 400:
+            self.text = response.text
+        else:
+            self.text = ''
 
 
 class Event(object):
@@ -60,6 +73,10 @@ class Events(object):
 
     def store(self, typ, data, ref='', sub='', sender=''):
         index = time.time()
+
+        if typ == EV_HTTP_RESPONSE:  # only store part of the instance
+            data = HTTPResponse(data)
+
         self.events.append(Event(index, typ, data, ref, sub, sender))
         return index
 
@@ -76,8 +93,11 @@ class Events(object):
     def get(self, typ):
         return [ev for ev in self.events if ev.typ == typ]
 
-    def get_data(self, typ):
-        return [d.data for d in self.get(typ)]
+    def get_data(self, typ, sender=''):
+        if sender:
+            return [d.data for d in self.get(typ) if d.sender == sender]
+        else:
+            return [d.data for d in self.get(typ)]
 
     def get_messages(self, typ, msg_cls):
         res = []
@@ -170,3 +190,11 @@ class Events(object):
 
     def reset(self):
         self.events = []
+
+    def when(self, typ, msg):
+        res = []
+        for m in self.get(typ):
+            if m.data.__class__ == msg:
+                res.append(m.timestamp)
+
+        return res
