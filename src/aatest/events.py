@@ -1,7 +1,5 @@
 import time
 
-from requests import Response
-
 __author__ = 'roland'
 
 # standard event labels
@@ -34,6 +32,7 @@ class HTTPResponse(object):
         self.status_code = response.status_code
         self.headers = response.headers
         self.url = response.url
+
         # Should perhaps be more intelligent about this
         if self.status_code >= 400:
             self.text = response.text
@@ -198,3 +197,6 @@ class Events(object):
                 res.append(m.timestamp)
 
         return res
+
+    def last_event_type(self):
+        return self.events[-1].typ
