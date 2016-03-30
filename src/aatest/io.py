@@ -1,43 +1,17 @@
 import logging
-import os
-from future.backports.urllib.parse import quote
 
-try:
-    from saml2.time_util import in_a_while
-except ImportError:
-    from oic.utils.time_util import in_a_while
-
-from aatest import exception_trace
-
-from aatest.check import ERROR
-from aatest.check import OK
+from aatest import exception_trace, Break
+from aatest.check import ERROR, State
 from aatest.check import WARNING
-from aatest.check import INCOMPLETE
-from aatest.summation import condition
+from aatest.events import EV_CONDITION
+from aatest.result import Result
+from aatest.result import SIGN
 from aatest.summation import eval_state
 from aatest.summation import represent_result
-from aatest.summation import trace_output
 
 __author__ = 'roland'
 
 logger = logging.getLogger(__name__)
-
-TEST_RESULTS = {OK: "OK", ERROR: "ERROR", WARNING: "WARNING",
-                INCOMPLETE: "INCOMPLETE"}
-
-
-def safe_path(eid, *args):
-    s = quote(eid)
-    s = s.replace('/', '%2F')
-
-    path = 'log/{}'.format(s)
-    for arg in args[:-1]:
-        path = '{}/{}'.format(path, arg)
-
-    if not os.path.isdir(path):
-        os.makedirs(path)
-
-    return '{}/{}'.format(path, args[-1])
 
 
 class IO(object):
@@ -53,55 +27,57 @@ class IO(object):
     def represent_result(self, events):
         return represent_result(events)
 
-    def print_info(self, test_id, filename=''):
-        if 'conv' not in self.session:
-            return
-        else:
-            _conv = self.session["conv"]
+    def _err_response(self, where, err):
+        if err:
+            exception_trace(where, err, logger)
 
-        sline = 60 * "="
-        _pi = None
+        try:
+            res = Result(self.session, self.profile_handler)
+            res.print_info(self.session["testid"])
+            res.store_test_info()
+        except KeyError:
+            pass
 
-        if self.profile_handler:
-            ph = self.profile_handler(self.session)
-            try:
-                _pi = ph.get_profile_info(test_id)
-            except Exception as err:
-                raise
+    @staticmethod
+    def get_err_type(session):
+        errt = WARNING
+        try:
+            if session["node"].mti == {"all": "MUST"}:
+                errt = ERROR
+        except KeyError:
+            pass
+        return errt
 
-        if _pi:
-            output = ["%s: %s" % (k, _pi[k]) for k in ["Issuer", "Profile",
-                                                       "Test ID"]]
-        else:
-            output = ['Test ID: {}'.format(_conv.test_id)]
+    def log_fault(self, session, err, where, err_type=0):
+        if err_type == 0:
+            err_type = self.get_err_type(session)
 
-        output.append("Timestamp: {}".format(in_a_while()))
-        output.extend(["", sline, ""])
-        output.extend(trace_output(_conv.trace))
-        output.extend(["", sline, ""])
-        output.extend(condition(_conv.events))
-        output.extend(["", sline, ""])
-        output.extend(['Events', '{}'.format(_conv.events)])
-        output.extend(["", sline, ""])
-        # and lastly the result
-        output.append(
-            "RESULT: {}".format(self.represent_result(_conv.events)))
-        output.append("")
+        if "node" in session:
+            if err:
+                if isinstance(err, Break):
+                    session["node"].state = WARNING
+                else:
+                    session["node"].state = err_type
+            else:
+                session["node"].state = err_type
 
-        txt = "\n".join(output)
-
-        if filename:
-            f = open(filename, 'w')
-            f.write(txt)
-            f.close()
-        else:
-            print(txt)
-
-    def err_response(self, where, err):
-        pass
-
-
-SIGN = {OK: "+", WARNING: "?", ERROR: "-", INCOMPLETE: "!"}
+        if "conv" in session:
+            if err:
+                if isinstance(err, str):
+                    pass
+                else:
+                    session["conv"].trace.error("%s:%s" % (
+                        err.__class__.__name__, str(err)))
+                session["conv"].events.store(EV_CONDITION,
+                                             State("Fault", status=ERROR,
+                                                   name=err_type,
+                                                   message="{}".format(err)))
+            else:
+                session["conv"].events.store(
+                    EV_CONDITION, State(
+                        "Fault", status=ERROR,
+                        name=err_type,
+                        message="Error in %s" % where))
 
 
 class ClIO(IO):
@@ -117,13 +93,4 @@ class ClIO(IO):
         _state = eval_state(self.session["conv"].events)
         print(("{} {}".format(SIGN[_state], self.session["node"].name)))
 
-    def err_response(self, where, err):
-        if err:
-            exception_trace(where, err, logger)
-
-        try:
-            _tid = self.session["testid"]
-            self.print_info(self.session, _tid)
-        except KeyError:
-            pass
 

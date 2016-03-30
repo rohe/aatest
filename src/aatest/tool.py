@@ -75,7 +75,6 @@ class Tester(object):
             return self.run_flow(test_id, conf=kw_args['conf'])
         except Exception as err:
             exception_trace("", err, logger)
-            self.inut.print_info(test_id)
             return self.inut.err_response("run", err)
 
     def handle_response(self, resp, index, oper=None):
