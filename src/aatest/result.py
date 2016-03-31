@@ -38,12 +38,7 @@ class Result(object):
         self.session = session
 
     def result(self):
-        _conv = self.session["conv"]
-        info = {
-            "events": _conv.events,
-            "trace": _conv.trace
-        }
-        _state = eval_state(info)
+        _state = eval_state(self.session["conv"].events)
         print("{} {}".format(SIGN[_state], self.session["node"].name))
 
     def print_result(self, events):

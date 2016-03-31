@@ -38,6 +38,9 @@ class IO(object):
         except KeyError:
             pass
 
+    def err_response(self, where, err):
+        self._err_response(where, err)
+
     @staticmethod
     def get_err_type(session):
         errt = WARNING

@@ -26,8 +26,8 @@ class ConfigurationError(Exception):
 
 
 class Tester(object):
-    def __init__(self, inut, sh, profile, flows, check_factory,
-                 msg_factory, cache, make_entity=None, map_prof=None,
+    def __init__(self, inut, sh, profile, flows=None, check_factory=None,
+                 msg_factory=None, cache=None, make_entity=None, map_prof=None,
                  trace_cls=None, com_handler=None, **kwargs):
         self.inut = inut
         self.sh = sh
