@@ -1,7 +1,8 @@
 import json
 import re
 
-from urllib.parse import urlparse
+#from urllib.parse import urlparse
+from future.backports.urllib.parse import urlparse
 from robobrowser import RoboBrowser
 
 
