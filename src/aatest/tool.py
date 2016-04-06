@@ -1,4 +1,6 @@
 import logging
+from aatest.result import Result
+from aatest.summation import store_test_state
 from saml2.httputil import Response
 from aatest.check import OK
 from aatest.check import State
@@ -80,6 +82,9 @@ class Tester(object):
     def handle_response(self, resp, index, oper=None):
         return None
 
+    def fname(self, test_id):
+        raise NotImplemented()
+
     def run_flow(self, test_id, index=0, profiles=None, **kwargs):
         logger.info("<=<=<=<=< %s >=>=>=>=>" % test_id)
         _ss = self.sh
@@ -89,6 +94,7 @@ class Tester(object):
             pass
 
         self.conv.test_id = test_id
+        res = Result(self.sh, self.kwargs['profile_handler'])
 
         if index >= len(self.conv.sequence):
             return None
@@ -152,4 +158,11 @@ class Tester(object):
         if isinstance(_oper, Done):
             self.conv.events.store(EV_CONDITION, State('Done', OK),
                                    sender='run_flow')
+            store_test_state(self.sh, self.conv.events)
+            res.store_test_info()
+            res.print_info(test_id, self.fname(test_id))
+        else:
+            store_test_state(self.sh, self.conv.events)
+            res.store_test_info()
+
         return True
