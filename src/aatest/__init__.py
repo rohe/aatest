@@ -52,6 +52,10 @@ class OperationError(AATestError):
     pass
 
 
+class ConditionError(FatalError):
+    pass
+
+
 def as_bytes(s):
     """
     Convert an unicode string to bytes.

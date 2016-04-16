@@ -8,8 +8,17 @@ def set_request_args(oper, args):
     oper.req_args.update(args)
 
 
+def set_response_args(oper, args):
+    oper.response_args.update(args)
+
+
 def set_op_args(oper, args):
     oper.op_args.update(args)
+
+
+def set_arg(oper, args):
+    for key, val in args.items():
+        setattr(oper, key, val)
 
 
 def cache_events(oper, arg):

@@ -5,6 +5,7 @@ from saml2.httputil import Response
 from aatest.check import OK
 from aatest.check import State
 
+from aatest import ConditionError
 from aatest import exception_trace
 from aatest.conversation import Conversation
 from aatest.events import EV_CONDITION
@@ -85,6 +86,12 @@ class Tester(object):
     def fname(self, test_id):
         raise NotImplemented()
 
+    def get_response(self, resp):
+        try:
+            return resp.response
+        except AttributeError:
+            return resp.text
+
     def run_flow(self, test_id, index=0, profiles=None, **kwargs):
         logger.info("<=<=<=<=< %s >=>=>=>=>" % test_id)
         _ss = self.sh
@@ -121,6 +128,11 @@ class Tester(object):
                     profile_map = None
                 _oper.setup(profile_map)
                 resp = _oper()
+            except ConditionError:
+                store_test_state(self.sh, self.conv.events)
+                res.store_test_info()
+                res.print_info(test_id, self.fname(test_id))
+                return False
             except Exception as err:
                 exception_trace('run_flow', err)
                 self.sh["index"] = index
@@ -133,13 +145,20 @@ class Tester(object):
                     if self.com_handler:
                         resp = self.com_handler(resp)
 
-                    try:
-                        resp = _oper.handle_response(resp.response)
-                    except AttributeError:
-                        resp = _oper.handle_response(resp.text)
+                    resp = _oper.handle_response(self.get_response(resp))
 
                     if resp:
                         return self.inut.respond(resp)
+
+            # should be done as late as possible, so all processing has been
+            # done
+            try:
+                _oper.post_tests()
+            except ConditionError:
+                store_test_state(self.sh, self.conv.events)
+                res.store_test_info()
+                res.print_info(test_id, self.fname(test_id))
+                return False
 
             index += 1
 

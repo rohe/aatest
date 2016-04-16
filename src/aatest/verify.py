@@ -3,8 +3,8 @@ import sys
 import traceback
 
 from aatest import Break
+from aatest import ConditionError
 from aatest import exception_trace
-from aatest import FatalError
 from aatest.check import CRITICAL
 from aatest.check import NOT_APPLICABLE
 from aatest.check import INTERACTION
@@ -49,7 +49,7 @@ class Verify(object):
                 if not stat.mti:
                     raise Break(stat.message)
                 else:
-                    raise FatalError(stat.message)
+                    raise ConditionError(stat.message)
             except KeyError:
                 pass
 
@@ -86,7 +86,7 @@ class Verify(object):
         chk = self.check_factory(test)()
         chk(self, self.conv.events.last_item(EV_CONDITION))
         if bryt:
-            e = FatalError("%s" % err)
+            e = ConditionError("%s" % err)
             e.trace = "".join(traceback.format_exception(*sys.exc_info()))
             raise e
 

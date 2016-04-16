@@ -64,6 +64,12 @@ class Operation(object):
     def run(self, *args, **kwargs):
         pass
 
+    def post_tests(self):
+        if self.tests["post"]:
+            cls_name = self.__class__.__name__
+            _ver = Verify(self.check_factory, self.conv, cls_name=cls_name)
+            _ver.test_sequence(self.tests["post"])
+
     def __call__(self, *args, **kwargs):
         if self.skip:
             return
@@ -79,9 +85,6 @@ class Operation(object):
 
             self.conv.trace.info("Running '{}'".format(cls_name))
             res = self.run(*args, **kwargs)
-
-            if self.tests["post"]:
-                _ver.test_sequence(self.tests["post"])
 
             if res:
                 return res
