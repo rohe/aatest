@@ -40,7 +40,7 @@ class SessionHandler(object):
         _keys = list(self.keys())
         for key in _keys:
             if key in ["tests", "flow_names", "response_type",
-                       "test_info", "profile"]:  # don't touch !
+                       "test_info", "profile", 'test_conf']:  # don't touch !
                 continue
             else:
                 del self[key]

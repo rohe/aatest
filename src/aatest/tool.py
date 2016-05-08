@@ -1,16 +1,15 @@
 import logging
-from aatest.result import Result
-from aatest.summation import store_test_state
-from saml2.httputil import Response
-from aatest.check import OK
-from aatest.check import State
 
 from aatest import ConditionError
 from aatest import exception_trace
+from aatest.check import OK
+from aatest.check import State
 from aatest.conversation import Conversation
 from aatest.events import EV_CONDITION
-from aatest.verify import Verify
+from aatest.result import Result
 from aatest.session import Done
+from aatest.summation import store_test_state
+from aatest.verify import Verify
 
 __author__ = 'roland'
 
@@ -31,7 +30,7 @@ class ConfigurationError(Exception):
 class Tester(object):
     def __init__(self, inut, sh, profile, flows=None, check_factory=None,
                  msg_factory=None, cache=None, make_entity=None, map_prof=None,
-                 trace_cls=None, com_handler=None, **kwargs):
+                 trace_cls=None, com_handler=None, response_cls=None, **kwargs):
         self.inut = inut
         self.sh = sh
         self.conv = None
@@ -46,6 +45,7 @@ class Tester(object):
         self.trace_cls = trace_cls
         self.com_handler = com_handler
         self.cjar = {}
+        self.response_cls = response_cls
 
     def match_profile(self, test_id):
         _spec = self.flows[test_id]
@@ -138,7 +138,7 @@ class Tester(object):
                 self.sh["index"] = index
                 return self.inut.err_response("run_sequence", err)
             else:
-                if isinstance(resp, Response):
+                if isinstance(resp, self.response_cls):
                     return resp
 
                 if resp:
