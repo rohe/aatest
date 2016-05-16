@@ -73,12 +73,10 @@ class Verify(object):
             else:
                 if self.cls_name:
                     stat.context = self.cls_name
-                if stat.status == NOT_APPLICABLE:
-                    pass
-                else:
-                    self.conv.events.store('condition', stat,
-                                           sender=self.__class__)
-                    self.check_severity(stat)
+
+                self.conv.events.store('condition', stat,
+                                       sender=self.__class__)
+                self.check_severity(stat)
 
     def err_check(self, test, err=None, bryt=True):
         if err:
