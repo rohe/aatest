@@ -26,14 +26,16 @@ END_TAG = "==== END ===="
 class TestResult(object):
     name = 'test_result'
 
-    def __init__(self, test_id, status, name, mti=False):
+    def __init__(self, test_id, status=OK, name='', mti=False, message='',
+                 **kwargs):
         self.test_id = test_id
         self.status = status
         self.name = name
         self.mti = mti
-        self.message = ''
+        self.message = message
         self.http_status = 0
         self.cid = ''
+        self.extra = kwargs
 
     def __str__(self):
         if self.status:
@@ -41,7 +43,7 @@ class TestResult(object):
                                                       STATUSCODE[self.status],
                                                       self.message)
         else:
-            return '{}: status={}'.format(self.test_id, STATUSCODE[self.status])
+            return '{}: status=?'.format(self.test_id)
 
 
 class State(object):
@@ -97,10 +99,13 @@ class Check(object):
         self._kwargs = kwargs
 
     def _func(self, conv):
-        return {}
+        return TestResult('')
 
     def __call__(self, conv=None, output=None):
-        _stat = self.response(**self._func(conv))
+        _stat = self._func(conv)
+        if isinstance(_stat, dict):
+            _stat = self.response(**_stat)
+
         if output is not None:
             output.append(_stat)
         return _stat
