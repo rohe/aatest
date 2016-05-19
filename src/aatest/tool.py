@@ -136,8 +136,11 @@ class Tester(object):
             except Exception as err:
                 exception_trace('run_flow', err)
                 self.conv.events.store(EV_FAULT, err)
-                self.sh["index"] = index
-                return self.inut.err_response("run_sequence", err)
+                #self.sh["index"] = index
+                store_test_state(self.sh, self.conv.events)
+                res.store_test_info()
+                res.print_info(test_id, self.fname(test_id))
+                return False
             else:
                 if isinstance(resp, self.response_cls):
                     return resp
