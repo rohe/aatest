@@ -5,9 +5,12 @@ import logging
 import time
 import sys
 
+from oic.oauth2.message import Message
 from oic.utils.http_util import Response
 
 from aatest.events import EV_EXCEPTION
+from aatest.events import EV_PROTOCOL_RESPONSE
+from aatest.events import EV_RESPONSE
 
 from aatest.verify import Verify
 
@@ -38,6 +41,7 @@ def request_with_client_http_session(instance, method, url, **kwargs):
 
 class Operation(object):
     _tests = {"pre": [], "post": []}
+    message_cls = None
 
     def __init__(self, conv, inut, sh, test_id='', conf=None, funcs=None,
                  check_factory=None, cache=None, profile='', **kwargs):
@@ -134,7 +138,10 @@ class Operation(object):
                     "Expected exception '{}'.".format(self.expect_exception))
             if res:
                 self.conv.trace.reply(res)
-
+                if isinstance(res, self.message_cls):
+                    self.conv.events.store(EV_PROTOCOL_RESPONSE, res)
+                else:
+                    self.conv.events.store(EV_RESPONSE, res)
         return res
 
     def handle_response(self, *args):

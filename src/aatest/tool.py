@@ -5,7 +5,7 @@ from aatest import exception_trace
 from aatest.check import OK
 from aatest.check import State
 from aatest.conversation import Conversation
-from aatest.events import EV_CONDITION
+from aatest.events import EV_CONDITION, EV_FAULT
 from aatest.result import Result
 from aatest.session import Done
 from aatest.summation import store_test_state
@@ -135,8 +135,12 @@ class Tester(object):
                 return False
             except Exception as err:
                 exception_trace('run_flow', err)
-                self.sh["index"] = index
-                return self.inut.err_response("run_sequence", err)
+                self.conv.events.store(EV_FAULT, err)
+                #self.sh["index"] = index
+                store_test_state(self.sh, self.conv.events)
+                res.store_test_info()
+                res.print_info(test_id, self.fname(test_id))
+                return False
             else:
                 if isinstance(resp, self.response_cls):
                     return resp

@@ -2,6 +2,10 @@ import time
 
 __author__ = 'roland'
 
+# Message direction
+INCOMING = 1
+OUTGOING = 2
+
 # standard event labels
 EV_CONDITION = 'condition'
 EV_EXCEPTION = 'exception'
@@ -44,13 +48,14 @@ class HTTPResponse(object):
 
 class Event(object):
     def __init__(self, timestamp=0, typ='', data=None, ref='', sub='',
-                 sender=''):
+                 sender='', direction=0):
         self.timestamp = timestamp or time.time()
         self.typ = typ
         self.data = data
         self.ref = ref
         self.sub = sub
         self.sender = sender
+        self.direction = direction
 
     def __str__(self):
         return '{}:{}:{}'.format(self.timestamp, self.typ, self.data)
@@ -72,13 +77,13 @@ class Events(object):
     def __init__(self):
         self.events = []
 
-    def store(self, typ, data, ref='', sub='', sender=''):
+    def store(self, typ, data, ref='', sub='', sender='', direction=0):
         index = time.time()
 
         if typ == EV_HTTP_RESPONSE:  # only store part of the instance
             data = HTTPResponse(data)
 
-        self.events.append(Event(index, typ, data, ref, sub, sender))
+        self.events.append(Event(index, typ, data, ref, sub, sender, direction))
         return index
 
     def by_index(self, index):
@@ -90,6 +95,9 @@ class Events(object):
 
     def by_ref(self, ref):
         return [e for e in self.events if e.ref == ref]
+
+    def by_direction(self, direction):
+        return [e for e in self.events if e.direction == direction]
 
     def get(self, typ):
         return [ev for ev in self.events if ev.typ == typ]
