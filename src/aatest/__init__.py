@@ -1,4 +1,5 @@
 from __future__ import print_function
+import json
 import logging
 import time
 import traceback
@@ -118,7 +119,7 @@ class Trace(object):
         self.trace.append("%f [WARNING] %s" % (delta, msg))
 
     def __str__(self):
-        return "\n". join([as_unicode(t) for t in self.trace])
+        return "\n".join([as_unicode(t) for t in self.trace])
 
     def clear(self):
         self.trace = []
@@ -198,7 +199,7 @@ def exception_trace(tag, exc, log=None):
 
 class Node(object):
     def __init__(self, name, desc="", rmc=False, experr=False,
-                 tests=None, **kwargs):
+            tests=None, **kwargs):
         self.name = name
         self.desc = desc
         self.state = 0
@@ -231,3 +232,13 @@ class ContextFilter(logging.Filter):
     def filter(self, record):
         record.delta = time.time() - self.start
         return True
+
+
+def jlog(logger, typ, item):
+    func = getattr(logger, typ)
+    func(json.dumps(item, indent=2, sort_keys=True))
+
+
+def resp2json(resp):
+    return {'message': resp.message, 'status': resp.status,
+            'headers': resp.headers}
