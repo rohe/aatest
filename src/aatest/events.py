@@ -35,13 +35,23 @@ class NoSuchEvent(Exception):
 
 class HTTPResponse(object):
     def __init__(self, response):
-        self.status_code = response.status_code
+        try:
+            self.status_code = response.status_code
+        except AttributeError:
+            self.status_code = int(response.status.split(' ')[0])
+        try:
+            self.url = response.url
+        except AttributeError:
+            self.url = ''
+
         self.headers = response.headers
-        self.url = response.url
 
         # Should perhaps be more intelligent about this
         if self.status_code >= 400:
-            self.text = response.text
+            try:
+                self.text = response.text
+            except AttributeError:
+                self.text = response.message
         else:
             self.text = ''
 
