@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class Conversation(object):
     def __init__(self, flow, entity, msg_factory, check_factory=None,
-                 features=None, trace_cls=Trace, interaction=None,
+                 features=None, trace_cls=Trace, interaction=None, opid=None,
                  **extra_args):
         self.flow = flow
         self.entity = entity
@@ -20,6 +20,7 @@ class Conversation(object):
         self.interaction = Interaction(self.entity, interaction)
         self.check_factory = check_factory
         self.features = features
+        self.operator_id = opid
         self.extra_args = extra_args
         self.test_id = ""
         self.info = {}
